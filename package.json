@@ -1,0 +1,46 @@
+{
+  "name": "bnbot-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP Server for BNBOT Chrome Extension - Control Twitter/X via AI assistants like OpenClaw",
+  "main": "dist/index.js",
+  "bin": {
+    "bnbot-mcp-server": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "bnbot",
+    "twitter",
+    "chrome-extension",
+    "openclaw",
+    "ai-assistant"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jackleeio/bnbot-mcp-server.git"
+  },
+  "homepage": "https://github.com/jackleeio/bnbot-mcp-server",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "ws": "^8.18.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.14",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}
