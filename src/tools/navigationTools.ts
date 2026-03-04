@@ -55,8 +55,9 @@ export function registerNavigationTools(server: any, wsServer: BnbotWsServer) {
     'Navigate to Twitter/X search page with an optional query.',
     {
       query: z.string().optional().describe('Search query. If omitted, navigates to the search page.'),
+      sort: z.enum(['top', 'latest', 'people', 'media']).optional().describe('Search tab: top (default), latest, people, or media.'),
     },
-    async (params: { query?: string }) => {
+    async (params: { query?: string; sort?: string }) => {
       const result = await wsServer.sendAction('navigate_to_search', params);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
