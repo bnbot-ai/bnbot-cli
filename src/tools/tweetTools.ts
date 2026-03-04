@@ -49,7 +49,63 @@ export function registerTweetTools(server: any, wsServer: BnbotWsServer) {
       image: z.string().optional().describe('Image URL to attach to the reply'),
     },
     async (params: { tweetUrl?: string; text: string; image?: string }) => {
-      const result = await wsServer.sendAction('submit_reply', params);
+      // 如果提供了 tweetUrl，先导航并验证地址
+      if (params.tweetUrl) {
+        const navResult = await wsServer.sendAction('navigate_to_tweet', { tweetUrl: params.tweetUrl });
+        if (!navResult.success) {
+          return {
+            content: [{ type: 'text' as const, text: JSON.stringify({ success: false, error: `Navigation failed: ${navResult.error}` }, null, 2) }],
+            isError: true,
+          };
+        }
+        await new Promise(r => setTimeout(r, 2000));
+
+        // 验证导航后的地址是否包含目标推文 ID
+        const urlCheck = await wsServer.sendAction('get_current_url', {});
+        if (urlCheck.success) {
+          const currentUrl = urlCheck.data?.url || '';
+          // 从 tweetUrl 提取 status ID
+          const statusMatch = params.tweetUrl.match(/status\/(\d+)/);
+          if (statusMatch && !currentUrl.includes(statusMatch[1])) {
+            return {
+              content: [{ type: 'text' as const, text: JSON.stringify({ success: false, error: `Navigation verification failed: expected tweet ${statusMatch[1]}, but current URL is ${currentUrl}` }, null, 2) }],
+              isError: true,
+            };
+          }
+        }
+      }
+
+      // 1. 打开回复框
+      const openResult = await wsServer.sendAction('open_reply_composer', {});
+      if (!openResult.success) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ success: false, error: `Open reply composer failed: ${openResult.error}` }, null, 2) }],
+          isError: true,
+        };
+      }
+
+      // 2. 填充文本
+      const fillResult = await wsServer.sendAction('fill_reply_text', { content: params.text });
+      if (!fillResult.success) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({ success: false, error: `Fill text failed: ${fillResult.error}` }, null, 2) }],
+          isError: true,
+        };
+      }
+
+      // 3. 上传图片（如果有）
+      if (params.image) {
+        const imgResult = await wsServer.sendAction('upload_image_to_reply', { imageUrl: params.image });
+        if (!imgResult.success) {
+          return {
+            content: [{ type: 'text' as const, text: JSON.stringify({ success: false, error: `Upload image failed: ${imgResult.error}` }, null, 2) }],
+            isError: true,
+          };
+        }
+      }
+
+      // 4. 提交回复（传入回复文本用于验证）
+      const result = await wsServer.sendAction('submit_reply', { replyText: params.text });
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         isError: !result.success,

@@ -14,9 +14,36 @@ export function registerNavigationTools(server: any, wsServer: BnbotWsServer) {
     },
     async (params: { tweetUrl: string }) => {
       const result = await wsServer.sendAction('navigate_to_tweet', params);
+      if (!result.success) {
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+          isError: true,
+        };
+      }
+
+      // 等待页面加载后验证地址
+      await new Promise(r => setTimeout(r, 2000));
+      const urlCheck = await wsServer.sendAction('get_current_url', {});
+      if (urlCheck.success) {
+        const currentUrl = urlCheck.data?.url || '';
+        const statusMatch = params.tweetUrl.match(/status\/(\d+)/);
+        if (statusMatch && !currentUrl.includes(statusMatch[1])) {
+          return {
+            content: [{ type: 'text' as const, text: JSON.stringify({
+              success: false,
+              error: `Navigation verification failed: expected tweet ${statusMatch[1]}, but current URL is ${currentUrl}`,
+            }, null, 2) }],
+            isError: true,
+          };
+        }
+      }
+
       return {
-        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
-        isError: !result.success,
+        content: [{ type: 'text' as const, text: JSON.stringify({
+          ...result,
+          data: { ...result.data, verifiedUrl: urlCheck.data?.url },
+        }, null, 2) }],
+        isError: false,
       };
     }
   );
@@ -76,15 +103,16 @@ export function registerNavigationTools(server: any, wsServer: BnbotWsServer) {
   );
 
   server.tool(
-    'get_current_page_info',
-    'Get information about the current page open in the Twitter/X tab (URL, page type, etc.).',
+    'navigate_to_following',
+    'Navigate to the Following timeline tab on the home page. Navigates to /home first if needed.',
     {},
     async () => {
-      const result = await wsServer.sendAction('get_current_url', {});
+      const result = await wsServer.sendAction('navigate_to_following', {});
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         isError: !result.success,
       };
     }
   );
+
 }

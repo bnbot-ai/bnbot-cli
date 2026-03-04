@@ -32,7 +32,7 @@ export function registerStatusTools(server: any, wsServer: BnbotWsServer) {
     'Get information about the current page open in the Twitter/X tab (URL, page type, etc.).',
     {},
     async () => {
-      const result = await wsServer.sendAction('scrape_current_view', {});
+      const result = await wsServer.sendAction('get_current_url', {});
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         isError: !result.success,
