@@ -74,4 +74,17 @@ export function registerNavigationTools(server: any, wsServer: BnbotWsServer) {
       };
     }
   );
+
+  server.tool(
+    'get_current_page_info',
+    'Get information about the current page open in the Twitter/X tab (URL, page type, etc.).',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('get_current_url', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
 }
