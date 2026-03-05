@@ -67,6 +67,21 @@ export function registerScrapeTools(server: any, wsServer: BnbotWsServer) {
   );
 
   server.tool(
+    'scrape_thread',
+    'Scrape all tweets from a Twitter/X thread. Must be on a tweet detail page (/status/ URL). Collects all tweets by the same author, returns individual tweets and merged text.',
+    {
+      maxScrolls: z.number().default(10).describe('Maximum scroll attempts to load more tweets'),
+    },
+    async (params: { maxScrolls: number }) => {
+      const result = await wsServer.sendAction('scrape_thread', params);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
     'account_analytics',
     'Get Twitter/X account analytics data for a date range.',
     {

@@ -8,6 +8,8 @@ import { registerTweetTools } from './tweetTools.js';
 import { registerNavigationTools } from './navigationTools.js';
 import { registerStatusTools } from './statusTools.js';
 import { registerEngagementTools } from './engagementTools.js';
+import { registerContentTools } from './contentTools.js';
+import { registerArticleTools } from './articleTools.js';
 
 export function registerAllTools(server: any, wsServer: BnbotWsServer) {
   registerScrapeTools(server, wsServer);
@@ -15,6 +17,8 @@ export function registerAllTools(server: any, wsServer: BnbotWsServer) {
   registerNavigationTools(server, wsServer);
   registerStatusTools(server, wsServer);
   registerEngagementTools(server, wsServer);
+  registerContentTools(server, wsServer);
+  registerArticleTools(server, wsServer);
 
   console.error('[BNBOT MCP] All tools registered');
 }
