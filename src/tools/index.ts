@@ -10,6 +10,7 @@ import { registerStatusTools } from './statusTools.js';
 import { registerEngagementTools } from './engagementTools.js';
 import { registerContentTools } from './contentTools.js';
 import { registerArticleTools } from './articleTools.js';
+import { registerJobTools } from './jobTools.js';
 
 export function registerAllTools(server: any, wsServer: BnbotWsServer) {
   registerScrapeTools(server, wsServer);
@@ -19,6 +20,7 @@ export function registerAllTools(server: any, wsServer: BnbotWsServer) {
   registerEngagementTools(server, wsServer);
   registerContentTools(server, wsServer);
   registerArticleTools(server, wsServer);
+  registerJobTools(server);
 
   console.error('[BNBOT MCP] All tools registered');
 }
