@@ -130,6 +130,14 @@ Use the MCP Inspector to test tools directly:
 npx @modelcontextprotocol/inspector npx bnbot-mcp-server
 ```
 
+## Links
+
+- [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln)
+- [BNBot Skill for OpenClaw](https://github.com/bnbot-ai/bnbot-skill)
+- [ClawMoney](https://clawmoney.ai) — Social task marketplace powered by BNBot
+- [OpenClaw](https://openclaw.ai) — AI agent framework
+- Twitter: [@BNBOT_AI](https://x.com/BNBOT_AI)
+
 ## License
 
 MIT
