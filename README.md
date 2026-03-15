@@ -1,30 +1,47 @@
-# bnbot-mcp-server
+# bnbot
 
-MCP Server for [BNBOT Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln) - Control Twitter/X via AI assistants like OpenClaw or Claude Desktop.
+CLI and MCP Server for [BNBOT Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln) - Control Twitter/X via AI assistants like OpenClaw or Claude Desktop.
 
 ## Architecture
 
 ```
 AI Assistant (OpenClaw / Claude Desktop)
     ↓ stdio (MCP protocol)
-bnbot-mcp-server (local Node.js process)
+bnbot mcp (local Node.js process)
     ↓↑ WebSocket (ws://localhost:18900)
 BNBOT Chrome Extension
     ↓ DOM operations
 Twitter/X
 ```
 
+CLI mode connects to the same WebSocket server:
+
+```
+Terminal
+    → bnbot <tool> [args]
+    ↓ WebSocket client (ws://localhost:18900)
+bnbot serve (WebSocket server)
+    ↓↑ WebSocket
+BNBOT Chrome Extension
+```
+
 ## Setup
 
-### 1. Install BNBOT Chrome Extension
+### 1. Install
+
+```bash
+npm install -g bnbot
+```
+
+### 2. Install BNBOT Chrome Extension
 
 Install from the Chrome Web Store.
 
-### 2. Enable OpenClaw Integration
+### 3. Enable OpenClaw Integration
 
 In the BNBOT extension sidebar, open **Settings** and turn on the **OpenClaw** toggle.
 
-### 3. Configure Your AI Assistant
+### 4. Configure Your AI Assistant
 
 #### OpenClaw / Claude Desktop
 
@@ -35,7 +52,7 @@ Add to your MCP config:
   "mcpServers": {
     "bnbot": {
       "command": "npx",
-      "args": ["bnbot-mcp-server"]
+      "args": ["bnbot"]
     }
   }
 }
@@ -48,19 +65,51 @@ Add to your MCP config:
   "mcpServers": {
     "bnbot": {
       "command": "npx",
-      "args": ["bnbot-mcp-server", "--port", "9999"]
+      "args": ["bnbot", "--port", "9999"]
     }
   }
 }
 ```
 
-### 4. Use It
+### 5. Use It
 
 Ask your AI assistant:
 - "Scrape my Twitter timeline"
 - "Search for tweets about AI"
 - "Post a tweet saying hello world"
 - "Navigate to my bookmarks and scrape them"
+
+## Usage Modes
+
+### MCP Mode (Default)
+
+Starts both the WebSocket server and MCP stdio transport. This is the default when no subcommand is given, preserving backward compatibility.
+
+```bash
+bnbot                   # Start MCP + WebSocket server
+bnbot mcp               # Same as above (explicit)
+bnbot mcp --port 9999   # Custom port
+```
+
+### Serve Mode (Daemon)
+
+Starts the WebSocket server only. Use this when you want to run the server in the background and send commands via CLI.
+
+```bash
+bnbot serve              # Start WebSocket server on port 18900
+bnbot serve --port 9999  # Custom port
+```
+
+### CLI Mode
+
+Send a command to an already-running WebSocket server. Requires `bnbot serve` or `bnbot mcp` to be running.
+
+```bash
+bnbot get-extension-status
+bnbot post-tweet --text "Hello from BNBot!"
+bnbot scrape-timeline --limit 10
+bnbot navigate-to-search --query "AI agents"
+```
 
 ## Available Tools
 
@@ -127,7 +176,7 @@ Ask your AI assistant:
 Use the MCP Inspector to test tools directly:
 
 ```bash
-npx @modelcontextprotocol/inspector npx bnbot-mcp-server
+npx @modelcontextprotocol/inspector npx bnbot
 ```
 
 ## Links

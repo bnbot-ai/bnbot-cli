@@ -1,7 +1,11 @@
 /**
  * Local WebSocket Server
- * Listens on localhost for BNBOT Chrome Extension connections.
+ * Listens on localhost for BNBOT Chrome Extension connections and CLI client connections.
  * Provides request-response matching for action execution.
+ *
+ * Connection types:
+ * - Extension: sends status/heartbeat messages, receives action requests
+ * - CLI client: sends cli_action messages, receives action_result relayed from extension
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
@@ -19,10 +23,19 @@ interface PendingRequest {
   timer: NodeJS.Timeout;
 }
 
+/** Tracks a CLI client waiting for a response */
+interface CliPending {
+  ws: WebSocket;
+  originalRequestId: string;
+  timer: NodeJS.Timeout;
+}
+
 export class BnbotWsServer {
   private wss: WebSocketServer | null = null;
   private client: WebSocket | null = null;
   private pendingRequests: Map<string, PendingRequest> = new Map();
+  /** CLI client requests: maps internal requestId -> CLI client info */
+  private cliPending: Map<string, CliPending> = new Map();
   private extensionVersion: string | null = null;
   private port: number;
 
@@ -38,56 +51,223 @@ export class BnbotWsServer {
       this.wss = new WebSocketServer({ port: this.port, host: '127.0.0.1' });
 
       this.wss.on('listening', () => {
-        console.error(`[BNBOT MCP] WebSocket server listening on ws://localhost:${this.port}`);
+        console.error(`[BNBOT] WebSocket server listening on ws://localhost:${this.port}`);
         resolve();
       });
 
       this.wss.on('error', (error: NodeJS.ErrnoException) => {
         if (error.code === 'EADDRINUSE') {
-          console.error(`[BNBOT MCP] Port ${this.port} is already in use. Another MCP server may be running.`);
+          console.error(`[BNBOT] Port ${this.port} is already in use. Another instance may be running.`);
         }
         reject(error);
       });
 
       this.wss.on('connection', (ws) => {
-        console.error('[BNBOT MCP] Extension connected');
-
-        // Only allow one client at a time
-        if (this.client && this.client.readyState === WebSocket.OPEN) {
-          console.error('[BNBOT MCP] Replacing existing connection');
-          this.client.close(1000, 'Replaced by new connection');
-        }
-
-        this.client = ws;
+        // We don't know yet if this is an extension or a CLI client.
+        // We'll determine based on the first message received.
+        let identified = false;
 
         ws.on('message', (data) => {
           try {
-            const message: IncomingMessage = JSON.parse(data.toString());
-            this.handleMessage(message);
+            const message = JSON.parse(data.toString());
+
+            // CLI client sends cli_action messages
+            if (message.type === 'cli_action') {
+              identified = true;
+              this.handleCliAction(ws, message);
+              return;
+            }
+
+            // If not yet identified as CLI client, this must be the extension
+            if (!identified) {
+              identified = true;
+              this.handleExtensionConnect(ws);
+            }
+
+            this.handleMessage(message as IncomingMessage);
           } catch (err) {
-            console.error('[BNBOT MCP] Failed to parse message:', err);
+            console.error('[BNBOT] Failed to parse message:', err);
           }
         });
 
         ws.on('close', () => {
-          console.error('[BNBOT MCP] Extension disconnected');
+          // If this was the extension, clean up
           if (this.client === ws) {
+            console.error('[BNBOT] Extension disconnected');
             this.client = null;
             this.extensionVersion = null;
+            // Reject all pending MCP requests
+            for (const [id, pending] of this.pendingRequests) {
+              clearTimeout(pending.timer);
+              pending.reject(new Error('Extension disconnected'));
+              this.pendingRequests.delete(id);
+            }
+            // Send error to all pending CLI requests
+            for (const [id, cliReq] of this.cliPending) {
+              clearTimeout(cliReq.timer);
+              if (cliReq.ws.readyState === WebSocket.OPEN) {
+                cliReq.ws.send(JSON.stringify({
+                  type: 'action_result',
+                  requestId: cliReq.originalRequestId,
+                  success: false,
+                  error: 'Extension disconnected',
+                }));
+              }
+              this.cliPending.delete(id);
+            }
           }
-          // Reject all pending requests
-          for (const [id, pending] of this.pendingRequests) {
-            clearTimeout(pending.timer);
-            pending.reject(new Error('Extension disconnected'));
-            this.pendingRequests.delete(id);
+          // If it was a CLI client, clean up any pending requests from it
+          for (const [id, cliReq] of this.cliPending) {
+            if (cliReq.ws === ws) {
+              clearTimeout(cliReq.timer);
+              this.pendingRequests.delete(id);
+              this.cliPending.delete(id);
+            }
           }
         });
 
         ws.on('error', (err) => {
-          console.error('[BNBOT MCP] WebSocket error:', err.message);
+          console.error('[BNBOT] WebSocket error:', err.message);
         });
+
+        // If the first message is a status/heartbeat (extension), we need to identify
+        // proactively. Give a short grace period, then assume extension if still unidentified.
+        // Actually, extension connections typically send status immediately.
+        // CLI clients send cli_action immediately.
+        // So the message-based identification above should work fine.
       });
     });
+  }
+
+  /**
+   * Handle when a WebSocket is identified as the extension
+   */
+  private handleExtensionConnect(ws: WebSocket): void {
+    console.error('[BNBOT] Extension connected');
+
+    // Only allow one extension at a time
+    if (this.client && this.client.readyState === WebSocket.OPEN) {
+      console.error('[BNBOT] Replacing existing extension connection');
+      this.client.close(1000, 'Replaced by new connection');
+    }
+
+    this.client = ws;
+  }
+
+  /**
+   * Handle a cli_action message from a CLI client.
+   * Forward it to the extension and relay the result back.
+   */
+  private handleCliAction(
+    cliWs: WebSocket,
+    message: { type: string; requestId: string; actionType: string; actionPayload: Record<string, unknown> }
+  ): void {
+    const originalRequestId = message.requestId;
+
+    // Special case: get_extension_status doesn't need the extension
+    if (message.actionType === 'get_extension_status') {
+      const info = this.getExtensionInfo();
+      cliWs.send(JSON.stringify({
+        type: 'action_result',
+        requestId: originalRequestId,
+        success: true,
+        data: {
+          connected: info.connected,
+          extensionVersion: info.version,
+          wsPort: this.port,
+        },
+      }));
+      return;
+    }
+
+    if (!this.client || this.client.readyState !== WebSocket.OPEN) {
+      cliWs.send(JSON.stringify({
+        type: 'action_result',
+        requestId: originalRequestId,
+        success: false,
+        error: 'Extension not connected. Make sure BNBOT extension is running and OpenClaw integration is enabled in settings.',
+      }));
+      return;
+    }
+
+    // Generate a new internal requestId to track this through the extension
+    const internalId = randomUUID();
+    const request: ActionRequest = {
+      type: 'action',
+      requestId: internalId,
+      actionType: message.actionType,
+      actionPayload: message.actionPayload,
+    };
+
+    // Set up timeout
+    const timer = setTimeout(() => {
+      this.pendingRequests.delete(internalId);
+      this.cliPending.delete(internalId);
+      if (cliWs.readyState === WebSocket.OPEN) {
+        cliWs.send(JSON.stringify({
+          type: 'action_result',
+          requestId: originalRequestId,
+          success: false,
+          error: `Action '${message.actionType}' timed out after ${DEFAULT_TIMEOUT / 1000}s`,
+        }));
+      }
+    }, DEFAULT_TIMEOUT);
+
+    // Track the CLI request
+    this.cliPending.set(internalId, { ws: cliWs, originalRequestId, timer });
+
+    // Set up pending request handler that relays to CLI client
+    this.pendingRequests.set(internalId, {
+      resolve: (result: ActionResult) => {
+        const cliReq = this.cliPending.get(internalId);
+        if (cliReq) {
+          clearTimeout(cliReq.timer);
+          this.cliPending.delete(internalId);
+          if (cliReq.ws.readyState === WebSocket.OPEN) {
+            cliReq.ws.send(JSON.stringify({
+              type: 'action_result',
+              requestId: cliReq.originalRequestId,
+              success: result.success,
+              data: result.data,
+              error: result.error,
+            }));
+          }
+        }
+      },
+      reject: (error: Error) => {
+        const cliReq = this.cliPending.get(internalId);
+        if (cliReq) {
+          clearTimeout(cliReq.timer);
+          this.cliPending.delete(internalId);
+          if (cliReq.ws.readyState === WebSocket.OPEN) {
+            cliReq.ws.send(JSON.stringify({
+              type: 'action_result',
+              requestId: cliReq.originalRequestId,
+              success: false,
+              error: error.message,
+            }));
+          }
+        }
+      },
+      timer,
+    });
+
+    // Forward to extension
+    try {
+      this.client.send(JSON.stringify(request));
+    } catch (err) {
+      clearTimeout(timer);
+      this.pendingRequests.delete(internalId);
+      this.cliPending.delete(internalId);
+      if (cliWs.readyState === WebSocket.OPEN) {
+        cliWs.send(JSON.stringify({
+          type: 'action_result',
+          requestId: originalRequestId,
+          success: false,
+          error: err instanceof Error ? err.message : 'Failed to send to extension',
+        }));
+      }
+    }
   }
 
   /**
@@ -108,6 +288,10 @@ export class BnbotWsServer {
       pending.reject(new Error('Server shutting down'));
     }
     this.pendingRequests.clear();
+    for (const [, cliReq] of this.cliPending) {
+      clearTimeout(cliReq.timer);
+    }
+    this.cliPending.clear();
   }
 
   /**
@@ -122,14 +306,14 @@ export class BnbotWsServer {
           this.pendingRequests.delete(message.requestId);
           pending.resolve(message);
         } else {
-          console.error('[BNBOT MCP] Received result for unknown request:', message.requestId);
+          console.error('[BNBOT] Received result for unknown request:', message.requestId);
         }
         break;
       }
 
       case 'status':
         this.extensionVersion = message.version;
-        console.error(`[BNBOT MCP] Extension version: ${message.version}`);
+        console.error(`[BNBOT] Extension version: ${message.version}`);
         break;
 
       case 'heartbeat':
@@ -172,7 +356,7 @@ export class BnbotWsServer {
         if (!result.success && result.error === 'extension_busy') {
           retries++;
           const retryAfter = result.retryAfter || BUSY_RETRY_DELAY;
-          console.error(`[BNBOT MCP] Extension busy, retrying in ${retryAfter}ms (${retries}/${MAX_BUSY_RETRIES})`);
+          console.error(`[BNBOT] Extension busy, retrying in ${retryAfter}ms (${retries}/${MAX_BUSY_RETRIES})`);
           await new Promise((r) => setTimeout(r, retryAfter));
           continue;
         }
