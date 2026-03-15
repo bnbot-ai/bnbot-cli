@@ -12,7 +12,16 @@
  * Usage:
  *   npx bnbot-mcp-server              # Start with defaults (port 18900)
  *   npx bnbot-mcp-server --port 9999  # Custom port
+ *   npx bnbot-mcp-server --version    # Print version and exit
  */
+
+// Handle --version before starting any servers
+if (process.argv.includes('--version') || process.argv.includes('-v')) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const pkg = require('../package.json');
+  console.log(pkg.version);
+  process.exit(0);
+}
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
