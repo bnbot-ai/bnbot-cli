@@ -36,9 +36,14 @@ USAGE:
   bnbot                          Start MCP server with WebSocket (default)
   bnbot serve [--port PORT]      Start WebSocket server only (daemon mode)
   bnbot mcp   [--port PORT]      Start MCP + WebSocket server (same as default)
+  bnbot login [--email EMAIL]    Login to BNBot via email verification
   bnbot <tool> [--param value]   Send a command to a running server via WebSocket
   bnbot --version, -v            Print version
   bnbot --help, -h               Print this help
+
+AUTH:
+  bnbot login [--email EMAIL]    Login to BNBot via email verification
+                                 Sends auth tokens to connected extension
 
 AVAILABLE TOOLS:
   Status:
@@ -185,6 +190,12 @@ async function main(): Promise<void> {
   // Find the first non-flag argument as the subcommand
   const subcommand = args.find((a) => !a.startsWith('-'));
   const port = parsePort(args);
+
+  if (subcommand === 'login') {
+    const { runLogin } = await import('./auth.js');
+    await runLogin(args);
+    return;
+  }
 
   if (subcommand === 'serve') {
     await runServe(port);
