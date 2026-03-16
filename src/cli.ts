@@ -150,61 +150,92 @@ export async function runCliTool(toolName: string, argv: string[]): Promise<void
     delete params.images;
   }
 
-  const url = `ws://127.0.0.1:${port}`;
-  const requestId = randomUUID();
+  // Auto-split into thread when post-tweet has >4 media (Twitter limit: 4 per tweet)
+  const MAX_MEDIA_PER_TWEET = 4;
+  const resolvedMedia = params.media as Array<{ type: string; url: string }> | undefined;
+  if (toolName === 'post-tweet' && resolvedMedia && resolvedMedia.length > MAX_MEDIA_PER_TWEET) {
+    const text = String(params.text || '');
+    const draftOnly = params.draftOnly;
+    const tweets: Array<{ text: string; media: Array<{ type: string; url: string }> }> = [];
 
-  // For get-extension-status, we handle it specially since it's a local-only query
-  // on the MCP server side. In CLI mode, we just check if the WS server is reachable
-  // and if an extension is connected by sending the action and getting the response.
+    for (let i = 0; i < resolvedMedia.length; i += MAX_MEDIA_PER_TWEET) {
+      const chunk = resolvedMedia.slice(i, i + MAX_MEDIA_PER_TWEET);
+      tweets.push({
+        text: i === 0 ? text : `(${Math.floor(i / MAX_MEDIA_PER_TWEET) + 1}/${Math.ceil(resolvedMedia.length / MAX_MEDIA_PER_TWEET)})`,
+        media: chunk,
+      });
+    }
 
-  let ws: WebSocket;
-  try {
-    ws = new WebSocket(url);
-  } catch {
-    console.error(`Failed to connect to BNBot server at ${url}`);
-    console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
-    process.exit(1);
-    return; // unreachable, but keeps TS happy
+    // Switch to post_thread action
+    console.error(`[BNBOT] ${resolvedMedia.length} media files detected, auto-splitting into ${tweets.length}-tweet thread`);
+    params.tweets = tweets;
+    params.draftOnly = draftOnly;
+    delete params.text;
+    delete params.media;
+    // Override action type to post_thread
+    return runCliAction('post_thread', params, port);
   }
 
-  const timeout = setTimeout(() => {
-    console.error(`Timeout: no response within ${CLI_TIMEOUT / 1000}s`);
-    ws.close();
-    process.exit(1);
-  }, CLI_TIMEOUT);
+  return runCliAction(actionType, params, port);
+}
 
-  ws.on('open', () => {
-    const request = {
-      type: 'cli_action',
-      requestId,
-      actionType,
-      actionPayload: params,
-    };
-    ws.send(JSON.stringify(request));
-  });
+/**
+ * Send an action to the WS server and print the result.
+ */
+function runCliAction(actionType: string, params: Record<string, unknown>, port: number): Promise<void> {
+  return new Promise((resolve) => {
+    const url = `ws://127.0.0.1:${port}`;
+    const requestId = randomUUID();
 
-  ws.on('message', (data) => {
+    let ws: WebSocket;
     try {
-      const msg = JSON.parse(data.toString());
-      if (msg.requestId === requestId && msg.type === 'action_result') {
-        clearTimeout(timeout);
-        console.log(JSON.stringify(msg, null, 2));
-        ws.close();
-        process.exit(msg.success ? 0 : 1);
-      }
+      ws = new WebSocket(url);
     } catch {
-      // Ignore non-JSON messages
+      console.error(`Failed to connect to BNBot server at ${url}`);
+      console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
+      process.exit(1);
+      return;
     }
-  });
 
-  ws.on('error', (err) => {
-    clearTimeout(timeout);
-    console.error(`Connection error: ${err.message}`);
-    console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
-    process.exit(1);
-  });
+    const timeout = setTimeout(() => {
+      console.error(`Timeout: no response within ${CLI_TIMEOUT / 1000}s`);
+      ws.close();
+      process.exit(1);
+    }, CLI_TIMEOUT);
 
-  ws.on('close', () => {
-    clearTimeout(timeout);
+    ws.on('open', () => {
+      ws.send(JSON.stringify({
+        type: 'cli_action',
+        requestId,
+        actionType,
+        actionPayload: params,
+      }));
+    });
+
+    ws.on('message', (data) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg.requestId === requestId && msg.type === 'action_result') {
+          clearTimeout(timeout);
+          console.log(JSON.stringify(msg, null, 2));
+          ws.close();
+          process.exit(msg.success ? 0 : 1);
+        }
+      } catch {
+        // Ignore non-JSON messages
+      }
+    });
+
+    ws.on('error', (err) => {
+      clearTimeout(timeout);
+      console.error(`Connection error: ${err.message}`);
+      console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
+      process.exit(1);
+    });
+
+    ws.on('close', () => {
+      clearTimeout(timeout);
+      resolve();
+    });
   });
 }
