@@ -40,8 +40,14 @@ const TOOL_MAP: Record<string, string> = {
   'quote-tweet': 'quote_tweet',
   // Engagement
   'like-tweet': 'like_tweet',
+  'unlike-tweet': 'unlike_tweet',
   'retweet': 'retweet',
+  'unretweet': 'unretweet',
   'follow-user': 'follow_user',
+  'unfollow-user': 'unfollow_user',
+  'delete-tweet': 'delete_tweet',
+  'bookmark-tweet': 'bookmark_tweet',
+  'unbookmark-tweet': 'unbookmark_tweet',
   // Navigation
   'navigate-to-tweet': 'navigate_to_tweet',
   'navigate-to-search': 'navigate_to_search',

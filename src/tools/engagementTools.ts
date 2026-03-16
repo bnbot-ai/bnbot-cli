@@ -55,6 +55,71 @@ export function registerEngagementTools(server: any, wsServer: BnbotWsServer) {
   );
 
   server.tool(
+    'unlike_tweet',
+    'Unlike/remove like from the tweet on the currently open tweet page. Navigate to the tweet first using navigate_to_tweet.',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('unlike_tweet', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    'unretweet',
+    'Undo retweet/repost of the tweet on the currently open tweet page. Navigate to the tweet first using navigate_to_tweet.',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('unretweet', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    'delete_tweet',
+    'Delete the tweet on the currently open tweet page. Only works for your own tweets. Navigate to the tweet first using navigate_to_tweet.',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('delete_tweet', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    'bookmark_tweet',
+    'Bookmark/save the tweet on the currently open tweet page. Navigate to the tweet first using navigate_to_tweet.',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('bookmark_tweet', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    'unbookmark_tweet',
+    'Remove bookmark from the tweet on the currently open tweet page. Navigate to the tweet first using navigate_to_tweet.',
+    {},
+    async () => {
+      const result = await wsServer.sendAction('unbookmark_tweet', {});
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
     'follow_user',
     'Follow a user on Twitter/X. If username is provided, navigates to their profile first. Otherwise follows the author of the currently open tweet.',
     {
@@ -66,6 +131,25 @@ export function registerEngagementTools(server: any, wsServer: BnbotWsServer) {
         payload.username = args.username;
       }
       const result = await wsServer.sendAction('follow_user', payload);
+      return {
+        content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
+        isError: !result.success,
+      };
+    }
+  );
+
+  server.tool(
+    'unfollow_user',
+    'Unfollow a user on Twitter/X. If username is provided, navigates to their profile first. Otherwise unfollows the author of the currently open tweet.',
+    {
+      username: z.string().optional().describe('Optional Twitter username (without @) to navigate to their profile and unfollow'),
+    },
+    async (args: { username?: string }) => {
+      const payload: Record<string, unknown> = {};
+      if (args.username) {
+        payload.username = args.username;
+      }
+      const result = await wsServer.sendAction('unfollow_user', payload);
       return {
         content: [{ type: 'text' as const, text: JSON.stringify(result, null, 2) }],
         isError: !result.success,
