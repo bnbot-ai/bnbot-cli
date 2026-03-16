@@ -13,6 +13,7 @@
 
 import WebSocket from 'ws';
 import { randomUUID } from 'crypto';
+import { resolveMediaListAsync } from './tools/mediaUtils.js';
 
 const DEFAULT_PORT = 18900;
 const CLI_TIMEOUT = 60000; // 60s
@@ -121,6 +122,19 @@ export async function runCliTool(toolName: string, argv: string[]): Promise<void
   }
 
   const { port, params } = parseArgs(argv);
+
+  // Resolve media files/URLs to base64 data URLs before sending
+  if (params.media || params.images) {
+    const mediaSources = String(params.media || params.images).split(',').map(s => s.trim());
+    try {
+      params.media = await resolveMediaListAsync(mediaSources);
+    } catch (e: any) {
+      console.error(`Failed to process media: ${e.message}`);
+      process.exit(1);
+    }
+    delete params.images; // normalize to "media"
+  }
+
   const url = `ws://127.0.0.1:${port}`;
   const requestId = randomUUID();
 
