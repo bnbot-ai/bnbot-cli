@@ -89,16 +89,26 @@ function parseArgs(argv: string[]): { port: number; params: Record<string, unkno
         params[key] = true;
         i += 1;
       } else {
-        // Try to parse as number
+        let value: unknown;
         const num = Number(next);
         if (!isNaN(num) && next.trim() !== '') {
-          params[key] = num;
+          value = num;
         } else if (next === 'true') {
-          params[key] = true;
+          value = true;
         } else if (next === 'false') {
-          params[key] = false;
+          value = false;
         } else {
-          params[key] = next;
+          value = next;
+        }
+        // Collect repeated keys (e.g. --media a --media b) into arrays
+        if (params[key] !== undefined) {
+          if (Array.isArray(params[key])) {
+            (params[key] as unknown[]).push(value);
+          } else {
+            params[key] = [params[key], value];
+          }
+        } else {
+          params[key] = value;
         }
         i += 2;
       }
@@ -125,14 +135,19 @@ export async function runCliTool(toolName: string, argv: string[]): Promise<void
 
   // Resolve media files/URLs to base64 data URLs before sending
   if (params.media || params.images) {
-    const mediaSources = String(params.media || params.images).split(',').map(s => s.trim());
+    const raw = params.media || params.images;
+    // Normalize to flat string array: supports --media a --media b, --media a,b, or --media a
+    const mediaSources: string[] = (Array.isArray(raw) ? raw : [raw])
+      .flatMap((s: unknown) => String(s).split(','))
+      .map((s: string) => s.trim())
+      .filter((s: string) => s.length > 0);
     try {
       params.media = await resolveMediaListAsync(mediaSources);
     } catch (e: any) {
       console.error(`Failed to process media: ${e.message}`);
       process.exit(1);
     }
-    delete params.images; // normalize to "media"
+    delete params.images;
   }
 
   const url = `ws://127.0.0.1:${port}`;
