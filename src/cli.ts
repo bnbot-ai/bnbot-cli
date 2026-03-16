@@ -16,7 +16,7 @@ import { randomUUID } from 'crypto';
 import { resolveMediaListAsync } from './tools/mediaUtils.js';
 
 const DEFAULT_PORT = 18900;
-const CLI_TIMEOUT = 60000; // 60s
+const CLI_TIMEOUT = 120000; // 120s
 
 /**
  * Map of CLI tool names (kebab-case) to WebSocket action types (snake_case).
@@ -32,6 +32,8 @@ const TOOL_MAP: Record<string, string> = {
   'scrape-search-results': 'scrape_search_results',
   'scrape-current-view': 'scrape_current_view',
   'scrape-thread': 'scrape_thread',
+  'scrape-user-profile': 'scrape_user_profile',
+  'scrape-user-tweets': 'scrape_user_tweets',
   'account-analytics': 'account_analytics',
   // Tweet
   'post-tweet': 'post_tweet',
