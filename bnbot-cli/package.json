@@ -1,7 +1,7 @@
 {
   "name": "bnbot-cli",
-  "version": "2.0.0",
-  "description": "BNBot CLI — Control Twitter/X via Chrome Extension",
+  "version": "2.2.0",
+  "description": "BNBot CLI — Automate Twitter/X from your terminal",
   "type": "module",
   "bin": {
     "bnbot": "dist/index.js",

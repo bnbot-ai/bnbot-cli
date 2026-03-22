@@ -92,6 +92,31 @@ export async function followCommand(username) {
         process.exit(1);
     }
 }
+export async function closeCommand(options) {
+    const isSave = options.save || false;
+    console.log(chalk.dim(isSave ? 'Saving draft and closing...' : 'Discarding and closing...'));
+    try {
+        const result = await sendAction('close_composer', { save: isSave });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        const data = result.data;
+        if (data?.action === 'saved_as_draft') {
+            console.log(chalk.green('Saved as draft'));
+        }
+        else if (data?.action === 'discarded') {
+            console.log(chalk.green('Discarded'));
+        }
+        else {
+            console.log(chalk.green('Closed'));
+        }
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
 export async function statusCommand() {
     try {
         const result = await sendAction('get_extension_status', {});
