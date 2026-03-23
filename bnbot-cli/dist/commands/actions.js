@@ -17,10 +17,14 @@ export async function tweetCommand(text, options) {
             console.log(chalk.green('Draft ready — review and post manually'));
         }
         else {
-            console.log(chalk.green('Tweet posted'));
             const data = result.data;
-            if (data?.url || data?.tweet_url) {
-                console.log(chalk.cyan(data.url || data.tweet_url));
+            const url = data?.tweetUrl || data?.url || data?.tweet_url;
+            if (url) {
+                console.log(chalk.green('Tweet posted'));
+                console.log(url);
+            }
+            else {
+                console.log(chalk.green('Tweet posted'));
             }
         }
     }
