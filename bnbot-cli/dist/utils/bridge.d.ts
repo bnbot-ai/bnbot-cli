@@ -3,6 +3,7 @@
  * Auto-starts server if none running, waits for extension to connect.
  */
 export declare class BridgeServer {
+    private httpServer;
     private wss;
     private extensionClient;
     private pendingRequests;
@@ -13,6 +14,10 @@ export declare class BridgeServer {
     start(): Promise<void>;
     private handleMessage;
     stop(): void;
+    /**
+     * HTTP handler — serves local media files at /media?path=<abs_path>
+     */
+    private handleHttp;
     /**
      * Auto-login extension using clawmoney API key if available.
      */

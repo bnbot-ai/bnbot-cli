@@ -4,9 +4,10 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
+import { createServer, IncomingMessage, ServerResponse, Server } from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync, existsSync, createReadStream, statSync } from 'node:fs';
+import { join, extname } from 'node:path';
 import { homedir } from 'node:os';
 
 const DEFAULT_PORT = 18900;
@@ -19,6 +20,7 @@ interface PendingRequest {
 }
 
 export class BridgeServer {
+  private httpServer: Server | null = null;
   private wss: WebSocketServer | null = null;
   private extensionClient: WebSocket | null = null;
   private pendingRequests: Map<string, PendingRequest> = new Map();
@@ -32,9 +34,10 @@ export class BridgeServer {
 
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.wss = new WebSocketServer({ port: this.port, host: '127.0.0.1' });
-      this.wss.on('listening', () => resolve());
-      this.wss.on('error', (error: NodeJS.ErrnoException) => {
+      this.httpServer = createServer((req, res) => this.handleHttp(req, res));
+      this.wss = new WebSocketServer({ server: this.httpServer });
+      this.httpServer.listen(this.port, '127.0.0.1', () => resolve());
+      this.httpServer.on('error', (error: NodeJS.ErrnoException) => {
         if (error.code === 'EADDRINUSE') {
           reject(new Error(`Port ${this.port} already in use`));
         } else {
@@ -113,8 +116,56 @@ export class BridgeServer {
   stop(): void {
     this.extensionClient?.close(1000, 'Shutdown');
     this.wss?.close();
+    this.httpServer?.close();
     for (const [, p] of this.pendingRequests) { clearTimeout(p.timer); p.reject(new Error('Shutdown')); }
     this.pendingRequests.clear();
+  }
+
+  /**
+   * HTTP handler — serves local media files at /media?path=<abs_path>
+   */
+  private handleHttp(req: IncomingMessage, res: ServerResponse): void {
+    // CORS preflight
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204, {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+      });
+      res.end();
+      return;
+    }
+
+    const url = new URL(req.url || '/', `http://localhost:${this.port}`);
+    if (url.pathname !== '/media' || req.method !== 'GET') {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+
+    const filePath = url.searchParams.get('path');
+    if (!filePath || !existsSync(filePath)) {
+      res.writeHead(404);
+      res.end('File not found');
+      return;
+    }
+
+    const mimeMap: Record<string, string> = {
+      '.mp4': 'video/mp4', '.mov': 'video/quicktime', '.webm': 'video/webm',
+      '.avi': 'video/x-msvideo', '.mkv': 'video/x-matroska',
+      '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+      '.gif': 'image/gif', '.webp': 'image/webp',
+    };
+    const ext = extname(filePath).toLowerCase();
+    const contentType = mimeMap[ext] || 'application/octet-stream';
+    const stat = statSync(filePath);
+
+    res.writeHead(200, {
+      'Content-Type': contentType,
+      'Content-Length': stat.size,
+      'Access-Control-Allow-Origin': '*',
+    });
+    createReadStream(filePath).pipe(res);
   }
 
   /**

@@ -5,7 +5,7 @@ const program = new Command();
 program
     .name('bnbot')
     .description('BNBot (Brand & Bot) — AI-powered personal brand and social media automation')
-    .version('2.7.0');
+    .version('2.7.3');
 // tweet subcommand group
 const tweet = program.command('tweet').description('Tweet commands');
 tweet
@@ -20,7 +20,7 @@ tweet
     .option('-s, --save', 'Save as draft instead of discarding')
     .action(closeCommand);
 // scrape subcommand group
-const scrape = program.command('scrape').description('Scrape Twitter/X data');
+const scrape = program.command('scrape').description('Scrape social media data');
 scrape
     .command('user-tweets <username>')
     .description('Scrape tweets from a user')
