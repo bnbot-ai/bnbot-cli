@@ -35,7 +35,15 @@ export class BridgeServer {
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.httpServer = createServer((req, res) => this.handleHttp(req, res));
-      this.wss = new WebSocketServer({ server: this.httpServer });
+      this.wss = new WebSocketServer({ noServer: true });
+
+      // Only upgrade WebSocket requests, let HTTP pass through to handleHttp
+      this.httpServer.on('upgrade', (request, socket, head) => {
+        this.wss!.handleUpgrade(request, socket, head, (ws) => {
+          this.wss!.emit('connection', ws, request);
+        });
+      });
+
       this.httpServer.listen(this.port, '127.0.0.1', () => resolve());
       this.httpServer.on('error', (error: NodeJS.ErrnoException) => {
         if (error.code === 'EADDRINUSE') {
