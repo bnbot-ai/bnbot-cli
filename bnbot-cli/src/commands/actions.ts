@@ -127,13 +127,7 @@ async function ensureUserPage(username: string): Promise<void> {
     return; // Already on user's profile page
   }
   console.error(chalk.dim(`Navigating to @${username}...`));
-  // Use navigate_url action to go to profile page directly
-  const nav = await sendAction('navigate_url', { url: `https://x.com/${username}` });
-  if (!nav.success) {
-    // Fallback: use navigate_to_search which can handle any URL
-    const nav2 = await sendAction('navigate_to_search', { query: `from:${username}` });
-    if (!nav2.success) throw new Error('Navigation failed');
-  }
+  await sendAction('navigate_to_url', { url: `https://x.com/${username}` });
   await new Promise(r => setTimeout(r, 2000));
 }
 
