@@ -140,6 +140,119 @@ export async function closeCommand(options) {
         process.exit(1);
     }
 }
+// ── Scrape commands ──────────────────────────────────────────
+export async function scrapeUserTweetsCommand(username, options) {
+    const limit = parseInt(options.limit || '20', 10);
+    const scrollAttempts = parseInt(options.scrollAttempts || '5', 10);
+    console.error(chalk.dim(`Scraping @${username} tweets (limit: ${limit})...`));
+    try {
+        const result = await sendAction('scrape_user_tweets', { username, limit, scrollAttempts });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
+export async function scrapeUserProfileCommand(username) {
+    console.error(chalk.dim(`Scraping @${username} profile...`));
+    try {
+        const result = await sendAction('scrape_user_profile', { username });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
+export async function scrapeSearchCommand(query, options) {
+    const limit = parseInt(options.limit || '20', 10);
+    const tab = options.tab || 'top';
+    console.error(chalk.dim(`Searching: "${query}" (tab: ${tab}, limit: ${limit})...`));
+    try {
+        const params = { query, tab, limit };
+        if (options.from)
+            params.from = options.from;
+        if (options.since)
+            params.since = options.since;
+        if (options.until)
+            params.until = options.until;
+        if (options.lang)
+            params.lang = options.lang;
+        if (options.minLikes)
+            params.minLikes = parseInt(options.minLikes, 10);
+        if (options.minRetweets)
+            params.minRetweets = parseInt(options.minRetweets, 10);
+        if (options.has)
+            params.has = options.has;
+        const result = await sendAction('scrape_search_results', params);
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
+export async function scrapeTimelineCommand(options) {
+    const limit = parseInt(options.limit || '20', 10);
+    const scrollAttempts = parseInt(options.scrollAttempts || '5', 10);
+    console.error(chalk.dim(`Scraping timeline (limit: ${limit})...`));
+    try {
+        const result = await sendAction('scrape_timeline', { limit, scrollAttempts });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
+export async function scrapeBookmarksCommand(options) {
+    const limit = parseInt(options.limit || '20', 10);
+    console.error(chalk.dim(`Scraping bookmarks (limit: ${limit})...`));
+    try {
+        const result = await sendAction('scrape_bookmarks', { limit });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
+export async function scrapeThreadCommand(url) {
+    console.error(chalk.dim(`Scraping thread: ${url}`));
+    try {
+        const result = await sendAction('scrape_thread', { tweetUrl: url });
+        if (!result.success) {
+            console.error(chalk.red(result.error || 'Failed'));
+            process.exit(1);
+        }
+        console.log(JSON.stringify(result.data, null, 2));
+    }
+    catch (err) {
+        console.error(chalk.red(err.message));
+        process.exit(1);
+    }
+}
 export async function statusCommand() {
     try {
         const result = await sendAction('get_extension_status', {});
