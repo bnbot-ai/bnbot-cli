@@ -1,6 +1,8 @@
 # bnbot-cli
 
-Automate Twitter/X from your terminal. Powered by [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln).
+**BNBot (Brand & Bot)** — AI-powered personal brand and social media automation. Helps you run your personal brand and social accounts on Twitter/X from the terminal.
+
+Powered by [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln).
 
 ## Architecture
 
