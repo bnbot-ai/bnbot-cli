@@ -1,5 +1,19 @@
 import chalk from 'chalk';
+import { readFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
 import { sendAction, BridgeServer } from '../utils/bridge.js';
+
+function localFileToDataUrl(filePath: string): string {
+  const absPath = resolve(filePath);
+  const data = readFileSync(absPath);
+  const ext = absPath.split('.').pop()?.toLowerCase();
+  const mimeMap: Record<string, string> = {
+    mp4: 'video/mp4', mov: 'video/quicktime', webm: 'video/webm', avi: 'video/x-msvideo', mkv: 'video/x-matroska',
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+  };
+  const mime = mimeMap[ext ?? ''] || 'application/octet-stream';
+  return `data:${mime};base64,${data.toString('base64')}`;
+}
 
 export async function tweetCommand(text: string, options: { media?: string; draft?: boolean }) {
   const isDraft = options.draft || false;
@@ -12,7 +26,14 @@ export async function tweetCommand(text: string, options: { media?: string; draf
       const ext = options.media.split('.').pop()?.toLowerCase();
       const videoExts = ['mp4', 'mov', 'webm', 'avi', 'mkv'];
       const mediaType = videoExts.includes(ext ?? '') ? 'video' : 'image';
-      params.media = [{ type: mediaType, url: options.media }];
+
+      // Local file → convert to data URL so the extension can read it
+      let mediaUrl = options.media;
+      if (!options.media.startsWith('http') && !options.media.startsWith('data:') && existsSync(resolve(options.media))) {
+        console.log(chalk.dim('Reading local file...'));
+        mediaUrl = localFileToDataUrl(options.media);
+      }
+      params.media = [{ type: mediaType, url: mediaUrl }];
     }
 
     const result = await sendAction('post_tweet', params);

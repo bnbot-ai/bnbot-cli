@@ -1,6 +1,6 @@
 {
   "name": "bnbot-cli",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "description": "BNBot CLI — Automate Twitter/X from your terminal",
   "type": "module",
   "bin": {
