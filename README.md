@@ -1,6 +1,6 @@
 # bnbot-cli
 
-**BNBot (Brand & Bot)** — AI-powered personal brand and social media automation. Helps you run your personal brand and social accounts on Twitter/X from the terminal.
+**BNBot (Brand & Bot)** — AI-powered personal brand and social media automation. Helps you run your personal brand and social accounts from the terminal. Currently supports X (Twitter), more platforms coming soon.
 
 Powered by [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln).
 
