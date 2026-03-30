@@ -66,15 +66,34 @@ export async function retweetCommand(url) {
 export async function replyCommand(url, text, options) {
     console.log(chalk.dim(`Replying to: ${url}`));
     try {
-        const params = { tweetUrl: url, text };
-        if (options.media)
-            params.image = options.media;
-        const result = await sendAction('submit_reply', params);
+        // Step 1: Navigate to tweet
+        const nav = await sendAction('navigate_to_tweet', { tweetUrl: url });
+        if (!nav.success) {
+            console.error(chalk.red(nav.error || 'Navigate failed'));
+            process.exit(1);
+        }
+        // Step 2: Open reply composer
+        const open = await sendAction('open_reply_composer', {});
+        if (!open.success) {
+            console.error(chalk.red(open.error || 'Open composer failed'));
+            process.exit(1);
+        }
+        // Step 3: Fill reply text
+        const fill = await sendAction('fill_reply_text', { content: text, highlight: false });
+        if (!fill.success) {
+            console.error(chalk.red(fill.error || 'Fill text failed'));
+            process.exit(1);
+        }
+        // Step 4: Submit
+        const result = await sendAction('submit_reply', { waitForSuccess: true, replyText: text });
         if (!result.success) {
-            console.error(chalk.red(result.error || 'Failed'));
+            console.error(chalk.red(result.error || 'Submit failed'));
             process.exit(1);
         }
         console.log(chalk.green('Replied'));
+        const data = result.data;
+        if (data?.tweetUrl)
+            console.log(data.tweetUrl);
     }
     catch (err) {
         console.error(chalk.red(err.message));

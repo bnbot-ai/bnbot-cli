@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-
+"use strict";
 /**
  * BNBot - Control Twitter/X via CLI
  *
@@ -11,22 +11,19 @@
  *   bnbot --version / -v         # Print version
  *   bnbot --help / -h            # Print help
  */
-
+Object.defineProperty(exports, "__esModule", { value: true });
 // Handle --version before any imports
 if (process.argv.includes('--version') || process.argv.includes('-v')) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const pkg = require('../package.json');
-  console.log(pkg.version);
-  process.exit(0);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pkg = require('../package.json');
+    console.log(pkg.version);
+    process.exit(0);
 }
-
-import { BnbotWsServer } from './wsServer.js';
-import { CLI_TOOL_NAMES, runCliTool } from './cli.js';
-
+const wsServer_js_1 = require("./wsServer.js");
+const cli_js_1 = require("./cli.js");
 const DEFAULT_PORT = 18900;
-
-function printHelp(): void {
-  const help = `
+function printHelp() {
+    const help = `
 BNBot - Control Twitter/X via CLI
 
 USAGE:
@@ -99,91 +96,78 @@ ARCHITECTURE:
   "bnbot <tool>" connects as a client to an already-running server.
   Extension auto-login is handled via clawmoney API key (~/.clawmoney/config.yaml).
 `.trimStart();
-
-  console.log(help);
+    console.log(help);
 }
-
-function parsePort(args: string[]): number {
-  const idx = args.indexOf('--port');
-  if (idx !== -1 && args[idx + 1]) {
-    const p = parseInt(args[idx + 1], 10);
-    if (!isNaN(p)) return p;
-  }
-  return DEFAULT_PORT;
+function parsePort(args) {
+    const idx = args.indexOf('--port');
+    if (idx !== -1 && args[idx + 1]) {
+        const p = parseInt(args[idx + 1], 10);
+        if (!isNaN(p))
+            return p;
+    }
+    return DEFAULT_PORT;
 }
-
 /**
  * Start WebSocket server.
  * The Chrome Extension connects here. CLI tools also connect here.
  */
-async function runServe(port: number): Promise<void> {
-  const wsServer = new BnbotWsServer(port);
-
-  try {
-    await wsServer.start();
-  } catch (err) {
-    console.error('[BNBOT] Failed to start WebSocket server:', err);
-    process.exit(1);
-  }
-
-  console.error(`[BNBOT] WebSocket server running on ws://localhost:${port}`);
-  console.error('[BNBOT] Waiting for extension connection...');
-
-  const shutdown = () => {
-    console.error('[BNBOT] Shutting down...');
-    wsServer.stop();
-    process.exit(0);
-  };
-
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
+async function runServe(port) {
+    const wsServer = new wsServer_js_1.BnbotWsServer(port);
+    try {
+        await wsServer.start();
+    }
+    catch (err) {
+        console.error('[BNBOT] Failed to start WebSocket server:', err);
+        process.exit(1);
+    }
+    console.error(`[BNBOT] WebSocket server running on ws://localhost:${port}`);
+    console.error('[BNBOT] Waiting for extension connection...');
+    const shutdown = () => {
+        console.error('[BNBOT] Shutting down...');
+        wsServer.stop();
+        process.exit(0);
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 }
-
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-
-  // --help / -h
-  if (args.includes('--help') || args.includes('-h')) {
-    printHelp();
-    process.exit(0);
-  }
-
-  // Find the first non-flag argument as the subcommand
-  const subcommand = args.find((a) => !a.startsWith('-'));
-  const port = parsePort(args);
-
-  if (subcommand === 'login') {
-    const { runLogin } = await import('./auth.js');
-    await runLogin(args);
-    return;
-  }
-
-  if (subcommand === 'serve') {
+async function main() {
+    const args = process.argv.slice(2);
+    // --help / -h
+    if (args.includes('--help') || args.includes('-h')) {
+        printHelp();
+        process.exit(0);
+    }
+    // Find the first non-flag argument as the subcommand
+    const subcommand = args.find((a) => !a.startsWith('-'));
+    const port = parsePort(args);
+    if (subcommand === 'login') {
+        const { runLogin } = await import('./auth.js');
+        await runLogin(args);
+        return;
+    }
+    if (subcommand === 'serve') {
+        await runServe(port);
+        return;
+    }
+    // CLI tool mode: if the subcommand matches a known tool name
+    if (subcommand && cli_js_1.CLI_TOOL_NAMES.includes(subcommand)) {
+        // Pass remaining args after the tool name
+        const toolArgIndex = args.indexOf(subcommand);
+        const toolArgs = args.slice(toolArgIndex + 1);
+        await (0, cli_js_1.runCliTool)(subcommand, toolArgs);
+        return;
+    }
+    // Unknown subcommand
+    if (subcommand) {
+        console.error(`Unknown command: ${subcommand}`);
+        console.error('Run "bnbot --help" to see available commands.');
+        process.exit(1);
+    }
+    // No subcommand: default to serve mode
     await runServe(port);
-    return;
-  }
-
-  // CLI tool mode: if the subcommand matches a known tool name
-  if (subcommand && CLI_TOOL_NAMES.includes(subcommand)) {
-    // Pass remaining args after the tool name
-    const toolArgIndex = args.indexOf(subcommand);
-    const toolArgs = args.slice(toolArgIndex + 1);
-    await runCliTool(subcommand, toolArgs);
-    return;
-  }
-
-  // Unknown subcommand
-  if (subcommand) {
-    console.error(`Unknown command: ${subcommand}`);
-    console.error('Run "bnbot --help" to see available commands.');
-    process.exit(1);
-  }
-
-  // No subcommand: default to serve mode
-  await runServe(port);
 }
-
 main().catch((err) => {
-  console.error('[BNBOT] Fatal error:', err);
-  process.exit(1);
+    console.error('[BNBOT] Fatal error:', err);
+    process.exit(1);
 });
+//# sourceMappingURL=index.js.map

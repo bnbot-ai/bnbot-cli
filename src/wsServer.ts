@@ -10,6 +10,9 @@
 
 import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'crypto';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
 import type { ActionRequest, ActionResult, IncomingMessage } from './types.js';
 
 const DEFAULT_PORT = 18900;
@@ -38,6 +41,7 @@ export class BnbotWsServer {
   private cliPending: Map<string, CliPending> = new Map();
   private extensionVersion: string | null = null;
   private port: number;
+  private autoLoginDone: boolean = false;
 
   constructor(port?: number) {
     this.port = port || DEFAULT_PORT;
@@ -96,6 +100,7 @@ export class BnbotWsServer {
             console.error('[BNBOT] Extension disconnected');
             this.client = null;
             this.extensionVersion = null;
+            this.autoLoginDone = false;
             // Reject all pending MCP requests
             for (const [id, pending] of this.pendingRequests) {
               clearTimeout(pending.timer);
@@ -152,16 +157,79 @@ export class BnbotWsServer {
     }
 
     this.client = ws;
+
+    // Auto-login: if clawmoney API key exists, inject auth tokens
+    this.tryAutoLogin();
+  }
+
+  /**
+   * Try to auto-login the extension using clawmoney API key.
+   * Reads ~/.clawmoney/config.yaml, calls backend to get user tokens,
+   * and sends inject_auth_tokens to the extension.
+   */
+  private async tryAutoLogin(): Promise<void> {
+    const configPath = join(homedir(), '.clawmoney', 'config.yaml');
+    if (!existsSync(configPath)) return;
+
+    try {
+      const content = readFileSync(configPath, 'utf-8');
+      const match = content.match(/^api_key:\s*(.+)$/m);
+      const apiKey = match?.[1]?.trim().replace(/^['"]|['"]$/g, '');
+      if (!apiKey) return;
+
+      console.error('[BNBOT] Found clawmoney API key, auto-logging in...');
+
+      const API_BASE = 'https://api.bnbot.ai';
+      const res = await fetch(`${API_BASE}/api/v1/claw-agents/auth/login-extension`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+      });
+
+      if (!res.ok) {
+        console.error(`[BNBOT] Auto-login failed: HTTP ${res.status}`);
+        return;
+      }
+
+      const data = await res.json() as {
+        access_token: string;
+        refresh_token: string;
+        user: { email: string };
+      };
+
+      // Send tokens to extension
+      const requestId = randomUUID();
+      const request: ActionRequest = {
+        type: 'action',
+        requestId,
+        actionType: 'inject_auth_tokens',
+        actionPayload: {
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          user: data.user,
+        },
+      };
+
+      if (this.client && this.client.readyState === WebSocket.OPEN) {
+        this.client.send(JSON.stringify(request));
+        this.autoLoginDone = true;
+        console.error(`[BNBOT] Auto-login: tokens sent to extension (${data.user.email})`);
+      }
+    } catch (err) {
+      console.error('[BNBOT] Auto-login error:', (err as Error).message);
+    }
   }
 
   /**
    * Handle a cli_action message from a CLI client.
    * Forward it to the extension and relay the result back.
    */
-  private handleCliAction(
+  private async handleCliAction(
     cliWs: WebSocket,
     message: { type: string; requestId: string; actionType: string; actionPayload: Record<string, unknown> }
-  ): void {
+  ): Promise<void> {
     const originalRequestId = message.requestId;
 
     // Special case: get_extension_status doesn't need the extension
@@ -188,6 +256,11 @@ export class BnbotWsServer {
         error: 'Extension not connected. Make sure BNBOT extension is running and OpenClaw integration is enabled in settings.',
       }));
       return;
+    }
+
+    // Ensure extension is logged in before executing actions
+    if (!this.autoLoginDone && message.actionType !== 'inject_auth_tokens') {
+      await this.tryAutoLogin();
     }
 
     // Generate a new internal requestId to track this through the extension
@@ -336,6 +409,11 @@ export class BnbotWsServer {
         success: false,
         error: 'Extension not connected. Make sure BNBOT extension is running and OpenClaw integration is enabled in settings.',
       };
+    }
+
+    // Ensure extension is logged in before executing actions
+    if (!this.autoLoginDone && actionType !== 'inject_auth_tokens') {
+      await this.tryAutoLogin();
     }
 
     const effectiveTimeout = timeout || DEFAULT_TIMEOUT;

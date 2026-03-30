@@ -4,6 +4,9 @@
  */
 import { WebSocketServer, WebSocket } from 'ws';
 import { randomUUID } from 'node:crypto';
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
 const DEFAULT_PORT = 18900;
 const ACTION_TIMEOUT = 60000;
 export class BridgeServer {
@@ -12,6 +15,7 @@ export class BridgeServer {
     pendingRequests = new Map();
     extensionVersion = null;
     port;
+    autoLoginDone = false;
     constructor(port) {
         this.port = port || DEFAULT_PORT;
     }
@@ -56,6 +60,8 @@ export class BridgeServer {
                 }
                 this.extensionClient = ws;
                 this.extensionVersion = message.version;
+                this.autoLoginDone = false;
+                this.tryAutoLogin();
                 break;
             case 'action': {
                 if (!this.extensionClient || this.extensionClient.readyState !== WebSocket.OPEN) {
@@ -99,6 +105,40 @@ export class BridgeServer {
             p.reject(new Error('Shutdown'));
         }
         this.pendingRequests.clear();
+    }
+    /**
+     * Auto-login extension using clawmoney API key if available.
+     */
+    async tryAutoLogin() {
+        const configPath = join(homedir(), '.clawmoney', 'config.yaml');
+        if (!existsSync(configPath))
+            return;
+        try {
+            const content = readFileSync(configPath, 'utf-8');
+            const match = content.match(/^api_key:\s*(.+)$/m);
+            const apiKey = match?.[1]?.trim().replace(/^['"]|['"]$/g, '');
+            if (!apiKey)
+                return;
+            const res = await fetch('https://api.bnbot.ai/api/v1/claw-agents/auth/login-extension', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            });
+            if (!res.ok)
+                return;
+            const data = await res.json();
+            const requestId = randomUUID();
+            if (this.extensionClient && this.extensionClient.readyState === WebSocket.OPEN) {
+                this.extensionClient.send(JSON.stringify({
+                    type: 'action',
+                    requestId,
+                    actionType: 'inject_auth_tokens',
+                    actionPayload: { access_token: data.access_token, refresh_token: data.refresh_token, user: data.user },
+                }));
+                this.autoLoginDone = true;
+                console.error(`[bnbot] Auto-login: ${data.user.email}`);
+            }
+        }
+        catch { /* silent */ }
     }
     isExtensionConnected() {
         return this.extensionClient !== null && this.extensionClient.readyState === WebSocket.OPEN;

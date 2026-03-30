@@ -1,7 +1,7 @@
 {
   "name": "bnbot-cli",
-  "version": "1.3.0",
-  "description": "CLI and MCP Server for BNBot Chrome Extension - Control Twitter/X via AI assistants",
+  "version": "2.7.0",
+  "description": "CLI for BNBot Chrome Extension - Automate Twitter/X from your terminal",
   "main": "dist/index.js",
   "bin": {
     "bnbot": "dist/index.js",

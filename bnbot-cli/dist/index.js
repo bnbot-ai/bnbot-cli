@@ -5,7 +5,7 @@ const program = new Command();
 program
     .name('bnbot')
     .description('BNBot CLI — Automate Twitter/X from your terminal')
-    .version('2.1.0');
+    .version('2.6.0');
 // tweet subcommand group
 const tweet = program.command('tweet').description('Tweet commands');
 tweet

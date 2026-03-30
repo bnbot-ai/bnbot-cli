@@ -8,10 +8,15 @@ export declare class BridgeServer {
     private pendingRequests;
     private extensionVersion;
     private port;
+    private autoLoginDone;
     constructor(port?: number);
     start(): Promise<void>;
     private handleMessage;
     stop(): void;
+    /**
+     * Auto-login extension using clawmoney API key if available.
+     */
+    private tryAutoLogin;
     isExtensionConnected(): boolean;
     getExtensionVersion(): string | null;
     getPort(): number;
