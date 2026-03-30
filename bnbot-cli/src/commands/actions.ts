@@ -119,11 +119,30 @@ export async function closeCommand(options: { save?: boolean }) {
 
 // ── Scrape commands ──────────────────────────────────────────
 
+async function ensureUserPage(username: string): Promise<void> {
+  const page = await sendAction('get_current_url', {});
+  const currentUrl = ((page.data as Record<string, string>)?.url || '').toLowerCase();
+  const target = `x.com/${username.toLowerCase()}`;
+  if (currentUrl.includes(target) && !currentUrl.includes('/status/')) {
+    return; // Already on user's profile page
+  }
+  console.error(chalk.dim(`Navigating to @${username}...`));
+  // Use navigate_url action to go to profile page directly
+  const nav = await sendAction('navigate_url', { url: `https://x.com/${username}` });
+  if (!nav.success) {
+    // Fallback: use navigate_to_search which can handle any URL
+    const nav2 = await sendAction('navigate_to_search', { query: `from:${username}` });
+    if (!nav2.success) throw new Error('Navigation failed');
+  }
+  await new Promise(r => setTimeout(r, 2000));
+}
+
 export async function scrapeUserTweetsCommand(username: string, options: { limit?: string; scrollAttempts?: string }) {
   const limit = parseInt(options.limit || '20', 10);
   const scrollAttempts = parseInt(options.scrollAttempts || '5', 10);
-  console.error(chalk.dim(`Scraping @${username} tweets (limit: ${limit})...`));
   try {
+    await ensureUserPage(username);
+    console.error(chalk.dim(`Scraping @${username} tweets (limit: ${limit})...`));
     const result = await sendAction('scrape_user_tweets', { username, limit, scrollAttempts });
     if (!result.success) { console.error(chalk.red(result.error || 'Failed')); process.exit(1); }
     console.log(JSON.stringify(result.data, null, 2));
@@ -131,8 +150,9 @@ export async function scrapeUserTweetsCommand(username: string, options: { limit
 }
 
 export async function scrapeUserProfileCommand(username: string) {
-  console.error(chalk.dim(`Scraping @${username} profile...`));
   try {
+    await ensureUserPage(username);
+    console.error(chalk.dim(`Scraping @${username} profile...`));
     const result = await sendAction('scrape_user_profile', { username });
     if (!result.success) { console.error(chalk.red(result.error || 'Failed')); process.exit(1); }
     console.log(JSON.stringify(result.data, null, 2));
