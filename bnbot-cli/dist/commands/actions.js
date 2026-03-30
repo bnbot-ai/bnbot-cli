@@ -6,8 +6,12 @@ export async function tweetCommand(text, options) {
     console.log(chalk.dim(`${isDraft ? 'Drafting' : 'Posting'}: "${preview}"`));
     try {
         const params = { text, draftOnly: isDraft };
-        if (options.media)
-            params.media = [{ type: 'image', url: options.media }];
+        if (options.media) {
+            const ext = options.media.split('.').pop()?.toLowerCase();
+            const videoExts = ['mp4', 'mov', 'webm', 'avi', 'mkv'];
+            const mediaType = videoExts.includes(ext ?? '') ? 'video' : 'image';
+            params.media = [{ type: mediaType, url: options.media }];
+        }
         const result = await sendAction('post_tweet', params);
         if (!result.success) {
             console.error(chalk.red(result.error || 'Failed'));

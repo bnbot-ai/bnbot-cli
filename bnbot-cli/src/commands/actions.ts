@@ -8,7 +8,12 @@ export async function tweetCommand(text: string, options: { media?: string; draf
 
   try {
     const params: Record<string, unknown> = { text, draftOnly: isDraft };
-    if (options.media) params.media = [{ type: 'image', url: options.media }];
+    if (options.media) {
+      const ext = options.media.split('.').pop()?.toLowerCase();
+      const videoExts = ['mp4', 'mov', 'webm', 'avi', 'mkv'];
+      const mediaType = videoExts.includes(ext ?? '') ? 'video' : 'image';
+      params.media = [{ type: mediaType, url: options.media }];
+    }
 
     const result = await sendAction('post_tweet', params);
     if (!result.success) {
