@@ -190,7 +190,7 @@ export async function runCliTool(toolName: string, argv: string[]): Promise<void
 /**
  * Send an action to the WS server and print the result.
  */
-function runCliAction(actionType: string, params: Record<string, unknown>, port: number): Promise<void> {
+export function runCliAction(actionType: string, params: Record<string, unknown>, port: number): Promise<void> {
   return new Promise((resolve) => {
     const url = `ws://127.0.0.1:${port}`;
     const requestId = randomUUID();

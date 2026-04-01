@@ -16,4 +16,8 @@ export declare const CLI_TOOL_NAMES: string[];
  * Run a CLI tool command by connecting to the WS server as a client.
  */
 export declare function runCliTool(toolName: string, argv: string[]): Promise<void>;
+/**
+ * Send an action to the WS server and print the result.
+ */
+export declare function runCliAction(actionType: string, params: Record<string, unknown>, port: number): Promise<void>;
 //# sourceMappingURL=cli.d.ts.map

@@ -17,6 +17,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CLI_TOOL_NAMES = void 0;
 exports.runCliTool = runCliTool;
+exports.runCliAction = runCliAction;
 const ws_1 = __importDefault(require("ws"));
 const crypto_1 = require("crypto");
 const mediaUtils_js_1 = require("./tools/mediaUtils.js");

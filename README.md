@@ -16,10 +16,10 @@ Then install the [BNBot Chrome Extension](https://chromewebstore.google.com/deta
 
 ```
 Terminal
-    → bnbot <command> [args]
-    ↓ WebSocket (ws://localhost:18900)
+    -> bnbot x post "Hello!"
+    | WebSocket (ws://localhost:18900)
 BNBot Chrome Extension
-    ↓ chrome.scripting / DOM / Internal APIs
+    | chrome.scripting / DOM / Internal APIs
 X + 30 platforms (TikTok, YouTube, Reddit, Bilibili, etc.)
 ```
 
@@ -27,66 +27,91 @@ X + 30 platforms (TikTok, YouTube, Reddit, Bilibili, etc.)
 
 ### Setup & Status
 
-| Command | Description |
-|---------|-------------|
-| `bnbot setup` | Install CLI + Claude skill |
-| `bnbot serve` | Start WebSocket server |
-| `bnbot login` | Login to BNBot |
-| `bnbot --help` | Show all commands |
+```bash
+bnbot setup                     # Install CLI + Claude skill
+bnbot serve                     # Start WebSocket server
+bnbot login                     # Login to BNBot
+bnbot status                    # Check extension connection
+```
 
-### Scrape (via Chrome Extension)
+### X Platform — Tweet & Engage
 
-| Command | Description |
-|---------|-------------|
-| `scrape-timeline` | Scrape home timeline |
-| `scrape-search-results --query "AI"` | Search and scrape tweets |
-| `scrape-user-profile --username elonmusk` | Get user profile |
-| `scrape-user-tweets --username elonmusk` | Scrape user's tweets |
-| `scrape-bookmarks` | Scrape bookmarked tweets |
-| `scrape-thread --tweetUrl <url>` | Scrape a tweet thread |
-| `account-analytics` | Get account analytics |
+```bash
+bnbot x post "Hello!"                          # Post a tweet
+bnbot x post "Look" -m ./photo.png             # Post with media
+bnbot x post "Draft" -d                        # Draft mode
+bnbot x thread '[{"text":"1"},{"text":"2"}]'   # Post a thread
+bnbot x reply <url> "Great post!"              # Reply to a tweet
+bnbot x quote <url> "My thoughts"              # Quote tweet
+bnbot x like <url>                             # Like a tweet
+bnbot x unlike <url>                           # Unlike
+bnbot x retweet <url>                          # Retweet
+bnbot x unretweet <url>                        # Unretweet
+bnbot x follow elonmusk                        # Follow a user
+bnbot x unfollow elonmusk                      # Unfollow
+bnbot x delete <url>                           # Delete a tweet
+bnbot x bookmark <url>                         # Bookmark
+bnbot x unbookmark <url>                       # Unbookmark
+bnbot x close                                  # Close composer
+```
 
-### Tweet & Engage (via Chrome Extension)
+### X Platform — Scrape
 
-| Command | Description |
-|---------|-------------|
-| `post-tweet --text "Hello!"` | Post a tweet |
-| `post-thread --tweets '[...]'` | Post a thread |
-| `submit-reply --text "..."` | Reply to current tweet |
-| `like-tweet` | Like current tweet |
-| `retweet` | Retweet |
-| `follow-user --username handle` | Follow a user |
+```bash
+bnbot x scrape timeline                        # Scrape home timeline
+bnbot x scrape timeline -l 50                  # With limit
+bnbot x scrape bookmarks                       # Scrape bookmarks
+bnbot x scrape search "AI agents"              # Search tweets
+bnbot x scrape search "AI" -t latest -l 50     # Latest tab, 50 results
+bnbot x scrape search "AI" --from user --since 2025-01-01
+bnbot x scrape user-tweets elonmusk            # User's tweets
+bnbot x scrape user-profile elonmusk           # User profile
+bnbot x scrape thread <url>                    # Scrape a thread
+bnbot x analytics                              # Account analytics
+```
 
-### Public Data (direct fetch, no extension needed)
+### X Platform — Navigate
 
-| Command | Description |
-|---------|-------------|
-| `search-hackernews --query "AI"` | Search Hacker News |
-| `search-stackoverflow --query "react"` | Search Stack Overflow |
-| `search-wikipedia --query "ChatGPT"` | Search Wikipedia |
-| `search-apple-podcasts --query "tech"` | Search Apple Podcasts |
-| `search-substack --query "AI"` | Search Substack |
-| `fetch-v2ex-hot` | V2EX hot topics |
-| `fetch-bbc-news` | BBC news headlines |
-| `fetch-bloomberg-news` | Bloomberg news |
-| `fetch-sinafinance-news` | Sina Finance 7x24 |
-| `search-sinablog --query "AI"` | Search Sina Blog |
-| `fetch-xiaoyuzhou-podcast --podcastId <id>` | Xiaoyuzhou podcast info |
+```bash
+bnbot x navigate <url>                         # Navigate to URL
+bnbot x navigate search "AI agents"            # Go to search
+bnbot x navigate bookmarks                     # Go to bookmarks
+bnbot x navigate notifications                 # Go to notifications
+```
 
-### Content (via Chrome Extension)
+### Public Data Scrapers (no extension needed)
 
-| Command | Description |
-|---------|-------------|
-| `fetch-wechat-article --url <url>` | Fetch WeChat article |
-| `fetch-tiktok-video --url <url>` | Fetch TikTok video |
-| `fetch-xiaohongshu-note --url <url>` | Fetch Xiaohongshu note |
+```bash
+bnbot hackernews search "AI agents" -l 20      # Hacker News
+bnbot stackoverflow search "react hooks"       # Stack Overflow
+bnbot wikipedia search "ChatGPT" --lang zh     # Wikipedia
+bnbot apple-podcasts search "tech"             # Apple Podcasts
+bnbot substack search "AI newsletter"          # Substack
+bnbot v2ex hot                                 # V2EX hot topics
+bnbot bloomberg news                           # Bloomberg
+bnbot bbc news                                 # BBC
+bnbot sinafinance news --type 1                # Sina Finance 7x24
+bnbot sinablog search "AI"                     # Sina Blog
+bnbot xiaoyuzhou podcast <id>                  # Xiaoyuzhou FM
+```
 
-### Article
+### Content Fetching (via extension)
 
-| Command | Description |
-|---------|-------------|
-| `create-article --title "..." --content "..."` | Create long-form article |
-| `open-article-editor` | Open article editor |
+```bash
+bnbot weixin article <url>                     # WeChat article
+bnbot tiktok fetch <url>                       # TikTok video
+bnbot xiaohongshu fetch <url>                  # Xiaohongshu note
+```
+
+### Backward Compatibility
+
+Legacy kebab-case commands still work:
+
+```bash
+bnbot post-tweet --text "Hello"                # -> bnbot x post "Hello"
+bnbot scrape-timeline --limit 10               # -> bnbot x scrape timeline -l 10
+bnbot search-hackernews --query "AI"           # -> bnbot hackernews search "AI"
+```
 
 ## Login
 
@@ -97,6 +122,10 @@ bnbot login
 # Or via email
 bnbot login --email you@example.com
 ```
+
+## Full Command Reference
+
+See [docs/COMMANDS.md](docs/COMMANDS.md) for the complete command reference with all options.
 
 ## Links
 
