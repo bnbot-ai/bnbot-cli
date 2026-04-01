@@ -49,6 +49,15 @@ import {
   fetchTiktokCommand,
   fetchXiaohongshuCommand,
 } from './commands/actions.js';
+import {
+  tiktokSearchCommand, youtubeSearchCommand, redditSearchCommand,
+  bilibiliSearchCommand, zhihuSearchCommand, xueqiuSearchCommand,
+  instagramSearchCommand, linuxdoSearchCommand, jikeSearchCommand,
+  xiaohongshuSearchCommand, weiboSearchCommand, doubanSearchCommand,
+  mediumSearchCommand, googleSearchCommand, facebookSearchCommand,
+  linkedinSearchCommand, kr36SearchCommand, producthuntHotCommand,
+  yahooFinanceQuoteCommand,
+} from './commands/scraperActions.js';
 
 const DEFAULT_PORT = 18900;
 
@@ -432,31 +441,69 @@ function buildProgram(): Command {
       await runPublicScraper('fetch-xiaoyuzhou-podcast', { podcastId: id });
     });
 
-  // ── Content fetching (via extension) ───────────────────
+  // ── Browser-based platform scrapers (via extension) ────
 
-  const weixin = program
-    .command('weixin')
-    .description('WeChat content');
-  weixin
-    .command('article <url>')
-    .description('Fetch WeChat article')
-    .action(fetchWeixinArticleCommand);
+  const tiktok = program.command('tiktok').description('TikTok');
+  tiktok.command('search <query>').description('Search TikTok videos').option('-l, --limit <n>', 'Max results', '10').action(tiktokSearchCommand);
+  tiktok.command('fetch <url>').description('Fetch TikTok video info').action(fetchTiktokCommand);
 
-  const tiktok = program
-    .command('tiktok')
-    .description('TikTok content');
-  tiktok
-    .command('fetch <url>')
-    .description('Fetch TikTok video info')
-    .action(fetchTiktokCommand);
+  const youtube = program.command('youtube').description('YouTube');
+  youtube.command('search <query>').description('Search YouTube videos').option('-l, --limit <n>', 'Max results', '20').action(youtubeSearchCommand);
 
-  const xiaohongshu = program
-    .command('xiaohongshu')
-    .description('Xiaohongshu content');
-  xiaohongshu
-    .command('fetch <url>')
-    .description('Fetch Xiaohongshu note')
-    .action(fetchXiaohongshuCommand);
+  const reddit = program.command('reddit').description('Reddit');
+  reddit.command('search <query>').description('Search Reddit posts').option('-l, --limit <n>', 'Max results', '10').action(redditSearchCommand);
+
+  const bilibili = program.command('bilibili').description('Bilibili');
+  bilibili.command('search <query>').description('Search Bilibili videos').option('-l, --limit <n>', 'Max results', '10').action(bilibiliSearchCommand);
+
+  const zhihu = program.command('zhihu').description('Zhihu');
+  zhihu.command('search <query>').description('Search Zhihu').option('-l, --limit <n>', 'Max results', '10').action(zhihuSearchCommand);
+
+  const xueqiu = program.command('xueqiu').description('Xueqiu (stocks)');
+  xueqiu.command('search <query>').description('Search stocks').option('-l, --limit <n>', 'Max results', '10').action(xueqiuSearchCommand);
+
+  const instagram = program.command('instagram').description('Instagram');
+  instagram.command('search <query>').description('Search Instagram users').option('-l, --limit <n>', 'Max results', '10').action(instagramSearchCommand);
+
+  const linuxdo = program.command('linux-do').description('Linux.do');
+  linuxdo.command('search <query>').description('Search Linux.do topics').option('-l, --limit <n>', 'Max results', '10').action(linuxdoSearchCommand);
+
+  const jike = program.command('jike').description('Jike');
+  jike.command('search <query>').description('Search Jike posts').option('-l, --limit <n>', 'Max results', '10').action(jikeSearchCommand);
+
+  const xiaohongshu = program.command('xiaohongshu').description('Xiaohongshu');
+  xiaohongshu.command('search <query>').description('Search Xiaohongshu notes').option('-l, --limit <n>', 'Max results', '10').action(xiaohongshuSearchCommand);
+  xiaohongshu.command('fetch <url>').description('Fetch Xiaohongshu note').action(fetchXiaohongshuCommand);
+
+  const weibo = program.command('weibo').description('Weibo');
+  weibo.command('search <query>').description('Search Weibo posts').option('-l, --limit <n>', 'Max results', '10').action(weiboSearchCommand);
+
+  const douban = program.command('douban').description('Douban');
+  douban.command('search <query>').description('Search Douban').option('-l, --limit <n>', 'Max results', '10').action(doubanSearchCommand);
+
+  const medium = program.command('medium').description('Medium');
+  medium.command('search <query>').description('Search Medium articles').option('-l, --limit <n>', 'Max results', '10').action(mediumSearchCommand);
+
+  const google = program.command('google').description('Google');
+  google.command('search <query>').description('Search Google').option('-l, --limit <n>', 'Max results', '10').action(googleSearchCommand);
+
+  const facebook = program.command('facebook').description('Facebook');
+  facebook.command('search <query>').description('Search Facebook posts').option('-l, --limit <n>', 'Max results', '10').action(facebookSearchCommand);
+
+  const linkedin = program.command('linkedin').description('LinkedIn');
+  linkedin.command('search <query>').description('Search LinkedIn jobs').option('-l, --limit <n>', 'Max results', '10').action(linkedinSearchCommand);
+
+  const kr36 = program.command('36kr').description('36Kr');
+  kr36.command('search <query>').description('Search 36Kr articles').option('-l, --limit <n>', 'Max results', '10').action(kr36SearchCommand);
+
+  const producthunt = program.command('producthunt').description('Product Hunt');
+  producthunt.command('hot').description('Top Product Hunt launches').option('-l, --limit <n>', 'Max results', '20').action(producthuntHotCommand);
+
+  const yahooFinance = program.command('yahoo-finance').description('Yahoo Finance');
+  yahooFinance.command('quote <symbol>').description('Get stock quote').action(yahooFinanceQuoteCommand);
+
+  const weixin = program.command('weixin').description('WeChat');
+  weixin.command('article <url>').description('Fetch WeChat article').action(fetchWeixinArticleCommand);
 
   return program;
 }
