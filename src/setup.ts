@@ -21,7 +21,7 @@ const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkcko
 
 export async function runSetup(): Promise<void> {
   console.log('');
-  console.log('🦞 BNBot Setup');
+  console.log('🦞 \x1b[1m\x1b[31mBNBot Setup\x1b[0m');
   console.log('');
 
   // Step 1: Install globally
