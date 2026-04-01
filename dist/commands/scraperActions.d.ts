@@ -5,22 +5,45 @@
 export declare function tiktokSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
+export declare function tiktokExploreCommand(options: {
+    limit?: string;
+}): Promise<void>;
 export declare function youtubeSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
+export declare function youtubeVideoCommand(url: string): Promise<void>;
+export declare function youtubeTranscriptCommand(url: string): Promise<void>;
 export declare function redditSearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function redditHotCommand(options: {
     limit?: string;
 }): Promise<void>;
 export declare function bilibiliSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
+export declare function bilibiliHotCommand(options: {
+    limit?: string;
+}): Promise<void>;
+export declare function bilibiliRankingCommand(options: {
+    limit?: string;
+}): Promise<void>;
 export declare function zhihuSearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function zhihuHotCommand(options: {
     limit?: string;
 }): Promise<void>;
 export declare function xueqiuSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
+export declare function xueqiuHotCommand(options: {
+    limit?: string;
+}): Promise<void>;
 export declare function instagramSearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function instagramExploreCommand(options: {
     limit?: string;
 }): Promise<void>;
 export declare function linuxdoSearchCommand(query: string, options: {
@@ -35,13 +58,28 @@ export declare function xiaohongshuSearchCommand(query: string, options: {
 export declare function weiboSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
+export declare function weiboHotCommand(options: {
+    limit?: string;
+}): Promise<void>;
 export declare function doubanSearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function doubanMovieHotCommand(options: {
+    limit?: string;
+}): Promise<void>;
+export declare function doubanBookHotCommand(options: {
+    limit?: string;
+}): Promise<void>;
+export declare function doubanTop250Command(options: {
     limit?: string;
 }): Promise<void>;
 export declare function mediumSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
 export declare function googleSearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function googleNewsCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
 export declare function facebookSearchCommand(query: string, options: {
@@ -51,6 +89,12 @@ export declare function linkedinSearchCommand(query: string, options: {
     limit?: string;
 }): Promise<void>;
 export declare function kr36SearchCommand(query: string, options: {
+    limit?: string;
+}): Promise<void>;
+export declare function kr36HotCommand(options: {
+    limit?: string;
+}): Promise<void>;
+export declare function kr36NewsCommand(options: {
     limit?: string;
 }): Promise<void>;
 export declare function producthuntHotCommand(options: {

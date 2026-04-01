@@ -241,6 +241,41 @@ function buildProgram() {
         .action(async (query, options) => {
         await (0, publicScrapers_js_1.runPublicScraper)('search-hackernews', { query, limit: Number(options.limit) || 20, sort: options.sort });
     });
+    hackernews
+        .command('top')
+        .description('HN top stories')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-hackernews-top', { limit: Number(options.limit) || 20 });
+    });
+    hackernews
+        .command('new')
+        .description('HN new stories')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-hackernews-new', { limit: Number(options.limit) || 20 });
+    });
+    hackernews
+        .command('best')
+        .description('HN best stories')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-hackernews-best', { limit: Number(options.limit) || 20 });
+    });
+    hackernews
+        .command('show')
+        .description('HN Show HN')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-hackernews-show', { limit: Number(options.limit) || 20 });
+    });
+    hackernews
+        .command('jobs')
+        .description('HN jobs')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-hackernews-jobs', { limit: Number(options.limit) || 20 });
+    });
     // stackoverflow
     const stackoverflow = program
         .command('stackoverflow')
@@ -251,6 +286,13 @@ function buildProgram() {
         .option('-l, --limit <n>', 'Max results', '10')
         .action(async (query, options) => {
         await (0, publicScrapers_js_1.runPublicScraper)('search-stackoverflow', { query, limit: Number(options.limit) || 10 });
+    });
+    stackoverflow
+        .command('hot')
+        .description('SO hot questions')
+        .option('-l, --limit <n>', 'Max results', '10')
+        .action(async (options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-stackoverflow-hot', { limit: Number(options.limit) || 10 });
     });
     // wikipedia
     const wikipedia = program
@@ -263,6 +305,13 @@ function buildProgram() {
         .option('-l, --limit <n>', 'Max results', '10')
         .action(async (query, options) => {
         await (0, publicScrapers_js_1.runPublicScraper)('search-wikipedia', { query, lang: options.lang, limit: Number(options.limit) || 10 });
+    });
+    wikipedia
+        .command('summary <title>')
+        .description('Wikipedia article summary')
+        .option('--lang <code>', 'Language code', 'en')
+        .action(async (title, options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-wikipedia-summary', { title, lang: options.lang });
     });
     // apple-podcasts
     const applePodcasts = program
@@ -295,6 +344,12 @@ function buildProgram() {
         .description('V2EX hot topics')
         .action(async () => {
         await (0, publicScrapers_js_1.runPublicScraper)('fetch-v2ex-hot', {});
+    });
+    v2ex
+        .command('latest')
+        .description('V2EX latest topics')
+        .action(async () => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-v2ex-latest', {});
     });
     // bloomberg
     const bloomberg = program
@@ -351,22 +406,38 @@ function buildProgram() {
         .action(async (id) => {
         await (0, publicScrapers_js_1.runPublicScraper)('fetch-xiaoyuzhou-podcast', { podcastId: id });
     });
+    xiaoyuzhou
+        .command('episodes <podcastId>')
+        .description('List podcast episodes')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .action(async (podcastId, options) => {
+        await (0, publicScrapers_js_1.runPublicScraper)('fetch-xiaoyuzhou-episodes', { podcastId, limit: Number(options.limit) || 20 });
+    });
     // ── Browser-based platform scrapers (via extension) ────
     const tiktok = program.command('tiktok').description('TikTok');
     tiktok.command('search <query>').description('Search TikTok videos').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.tiktokSearchCommand);
+    tiktok.command('explore').description('Trending TikTok videos').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.tiktokExploreCommand);
     tiktok.command('fetch <url>').description('Fetch TikTok video info').action(actions_js_1.fetchTiktokCommand);
     const youtube = program.command('youtube').description('YouTube');
     youtube.command('search <query>').description('Search YouTube videos').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.youtubeSearchCommand);
+    youtube.command('video <url>').description('Fetch YouTube video info').action(scraperActions_js_1.youtubeVideoCommand);
+    youtube.command('transcript <url>').description('Fetch YouTube video transcript').action(scraperActions_js_1.youtubeTranscriptCommand);
     const reddit = program.command('reddit').description('Reddit');
     reddit.command('search <query>').description('Search Reddit posts').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.redditSearchCommand);
+    reddit.command('hot').description('Reddit frontpage hot posts').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.redditHotCommand);
     const bilibili = program.command('bilibili').description('Bilibili');
     bilibili.command('search <query>').description('Search Bilibili videos').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.bilibiliSearchCommand);
+    bilibili.command('hot').description('Bilibili popular videos').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.bilibiliHotCommand);
+    bilibili.command('ranking').description('Bilibili ranking').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.bilibiliRankingCommand);
     const zhihu = program.command('zhihu').description('Zhihu');
     zhihu.command('search <query>').description('Search Zhihu').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.zhihuSearchCommand);
+    zhihu.command('hot').description('Zhihu hot topics').option('-l, --limit <n>', 'Max results', '50').action(scraperActions_js_1.zhihuHotCommand);
     const xueqiu = program.command('xueqiu').description('Xueqiu (stocks)');
     xueqiu.command('search <query>').description('Search stocks').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.xueqiuSearchCommand);
+    xueqiu.command('hot').description('Xueqiu hot stocks').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.xueqiuHotCommand);
     const instagram = program.command('instagram').description('Instagram');
     instagram.command('search <query>').description('Search Instagram users').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.instagramSearchCommand);
+    instagram.command('explore').description('Instagram explore posts').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.instagramExploreCommand);
     const linuxdo = program.command('linux-do').description('Linux.do');
     linuxdo.command('search <query>').description('Search Linux.do topics').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.linuxdoSearchCommand);
     const jike = program.command('jike').description('Jike');
@@ -376,18 +447,25 @@ function buildProgram() {
     xiaohongshu.command('fetch <url>').description('Fetch Xiaohongshu note').action(actions_js_1.fetchXiaohongshuCommand);
     const weibo = program.command('weibo').description('Weibo');
     weibo.command('search <query>').description('Search Weibo posts').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.weiboSearchCommand);
+    weibo.command('hot').description('Weibo hot topics').option('-l, --limit <n>', 'Max results', '50').action(scraperActions_js_1.weiboHotCommand);
     const douban = program.command('douban').description('Douban');
     douban.command('search <query>').description('Search Douban').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.doubanSearchCommand);
+    douban.command('movie-hot').description('Douban hot movies').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.doubanMovieHotCommand);
+    douban.command('book-hot').description('Douban hot books').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.doubanBookHotCommand);
+    douban.command('top250').description('Douban top 250 movies').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.doubanTop250Command);
     const medium = program.command('medium').description('Medium');
     medium.command('search <query>').description('Search Medium articles').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.mediumSearchCommand);
     const google = program.command('google').description('Google');
     google.command('search <query>').description('Search Google').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.googleSearchCommand);
+    google.command('news <query>').description('Search Google News').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.googleNewsCommand);
     const facebook = program.command('facebook').description('Facebook');
     facebook.command('search <query>').description('Search Facebook posts').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.facebookSearchCommand);
     const linkedin = program.command('linkedin').description('LinkedIn');
     linkedin.command('search <query>').description('Search LinkedIn jobs').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.linkedinSearchCommand);
     const kr36 = program.command('36kr').description('36Kr');
     kr36.command('search <query>').description('Search 36Kr articles').option('-l, --limit <n>', 'Max results', '10').action(scraperActions_js_1.kr36SearchCommand);
+    kr36.command('hot').description('36Kr hot articles').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.kr36HotCommand);
+    kr36.command('news').description('36Kr latest news').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.kr36NewsCommand);
     const producthunt = program.command('producthunt').description('Product Hunt');
     producthunt.command('hot').description('Top Product Hunt launches').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.producthuntHotCommand);
     const yahooFinance = program.command('yahoo-finance').description('Yahoo Finance');

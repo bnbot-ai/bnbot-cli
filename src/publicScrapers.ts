@@ -132,6 +132,78 @@ export const PUBLIC_SCRAPERS: Record<string, (params: Record<string, unknown>) =
     if (!pod) throw new Error('Podcast not found');
     return { title: pod.title, author: pod.author, description: (pod.brief || '').slice(0, 200), subscribers: pod.subscriptionCount, episodes: pod.episodeCount };
   },
+
+  // ── HackerNews — top, new, best, show, jobs ──────────────
+
+  'fetch-hackernews-top': async (p) => {
+    const data = await fetchJSON('https://hacker-news.firebaseio.com/v0/topstories.json');
+    const ids = (data || []).slice(0, Number(p.limit) || 20);
+    const stories = await Promise.all(ids.map((id: number) => fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)));
+    return stories.map((s: any, i: number) => ({ rank: i + 1, title: s.title, score: s.score, author: s.by, url: s.url || `https://news.ycombinator.com/item?id=${s.id}` }));
+  },
+
+  'fetch-hackernews-new': async (p) => {
+    const data = await fetchJSON('https://hacker-news.firebaseio.com/v0/newstories.json');
+    const ids = (data || []).slice(0, Number(p.limit) || 20);
+    const stories = await Promise.all(ids.map((id: number) => fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)));
+    return stories.map((s: any, i: number) => ({ rank: i + 1, title: s.title, score: s.score, author: s.by, url: s.url || `https://news.ycombinator.com/item?id=${s.id}` }));
+  },
+
+  'fetch-hackernews-best': async (p) => {
+    const data = await fetchJSON('https://hacker-news.firebaseio.com/v0/beststories.json');
+    const ids = (data || []).slice(0, Number(p.limit) || 20);
+    const stories = await Promise.all(ids.map((id: number) => fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)));
+    return stories.map((s: any, i: number) => ({ rank: i + 1, title: s.title, score: s.score, author: s.by, url: s.url || `https://news.ycombinator.com/item?id=${s.id}` }));
+  },
+
+  'fetch-hackernews-show': async (p) => {
+    const data = await fetchJSON('https://hacker-news.firebaseio.com/v0/showstories.json');
+    const ids = (data || []).slice(0, Number(p.limit) || 20);
+    const stories = await Promise.all(ids.map((id: number) => fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)));
+    return stories.map((s: any, i: number) => ({ rank: i + 1, title: s.title, score: s.score, author: s.by, url: s.url || `https://news.ycombinator.com/item?id=${s.id}` }));
+  },
+
+  'fetch-hackernews-jobs': async (p) => {
+    const data = await fetchJSON('https://hacker-news.firebaseio.com/v0/jobstories.json');
+    const ids = (data || []).slice(0, Number(p.limit) || 20);
+    const stories = await Promise.all(ids.map((id: number) => fetchJSON(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)));
+    return stories.map((s: any, i: number) => ({ rank: i + 1, title: s.title, score: s.score, author: s.by, url: s.url || `https://news.ycombinator.com/item?id=${s.id}` }));
+  },
+
+  // ── V2EX — latest ────────────────────────────────────────
+
+  'fetch-v2ex-latest': async () => {
+    const data = await fetchJSON('https://www.v2ex.com/api/topics/latest.json');
+    return (data || []).map((t: any, i: number) => ({ rank: i + 1, title: t.title, replies: t.replies, node: t.node?.title, url: t.url }));
+  },
+
+  // ── StackOverflow — hot ──────────────────────────────────
+
+  'fetch-stackoverflow-hot': async (p) => {
+    const data = await fetchJSON(`https://api.stackexchange.com/2.3/questions?order=desc&sort=hot&site=stackoverflow&pagesize=${p.limit || 10}`);
+    return (data.items || []).map((i: any, idx: number) => ({ rank: idx + 1, title: i.title, score: i.score, answers: i.answer_count, url: i.link }));
+  },
+
+  // ── Wikipedia — summary ──────────────────────────────────
+
+  'fetch-wikipedia-summary': async (p) => {
+    const lang = String(p.lang || 'en');
+    const data = await fetchJSON(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(String(p.title))}`);
+    return { title: data.title, extract: data.extract, url: data.content_urls?.desktop?.page };
+  },
+
+  // ── Xiaoyuzhou — episodes ────────────────────────────────
+
+  'fetch-xiaoyuzhou-episodes': async (p) => {
+    const html = await fetchText(`https://www.xiaoyuzhoufm.com/podcast/${p.podcastId}`);
+    const match = html.match(/<script id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/);
+    if (!match) throw new Error('Failed to extract page data');
+    const data = JSON.parse(match[1]);
+    const episodes = data.props?.pageProps?.podcast?.episodes || data.props?.pageProps?.episodes || [];
+    return episodes.slice(0, Number(p.limit) || 20).map((e: any, i: number) => ({
+      rank: i + 1, title: e.title, duration: e.duration, date: e.pubDate?.split('T')[0] || '',
+    }));
+  },
 };
 
 /** Names of all public scraper commands */
