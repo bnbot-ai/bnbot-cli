@@ -19,10 +19,11 @@ const SKILL_URL = 'https://bnbot.ai/skill.md';
 const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln';
 // Skill install paths for different agents
 const SKILL_TARGETS = [
-    { name: 'Claude Code', dir: (0, path_1.join)((0, os_1.homedir)(), '.claude', 'commands'), file: 'bnbot.md' },
-    { name: 'OpenClaw', dir: (0, path_1.join)((0, os_1.homedir)(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
-    { name: 'Codex', dir: (0, path_1.join)((0, os_1.homedir)(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
-    { name: 'Agent Skills', dir: (0, path_1.join)((0, os_1.homedir)(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
+    { dir: (0, path_1.join)((0, os_1.homedir)(), '.claude', 'commands'), file: 'bnbot.md' },
+    { dir: (0, path_1.join)((0, os_1.homedir)(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
+    { dir: (0, path_1.join)((0, os_1.homedir)(), '.openclaw', 'workspace', 'skills', 'bnbot'), file: 'SKILL.md' },
+    { dir: (0, path_1.join)((0, os_1.homedir)(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
+    { dir: (0, path_1.join)((0, os_1.homedir)(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 // Detect if terminal supports ANSI colors (not in OpenClaw/chat environments)
 const isTTY = process.stdout.isTTY === true;
