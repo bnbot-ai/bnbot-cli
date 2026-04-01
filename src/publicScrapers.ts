@@ -1,18 +1,32 @@
 /**
  * Public API Scrapers — direct fetch, no browser/extension needed.
  * Called as CLI commands: bnbot search-hackernews --query "AI" --limit 5
+ *
+ * Respects http_proxy / https_proxy / all_proxy env vars via undici ProxyAgent.
  */
+
+import { ProxyAgent, type Dispatcher } from 'undici';
+
+function getDispatcher(): Dispatcher | undefined {
+  const proxy = process.env.https_proxy || process.env.http_proxy || process.env.all_proxy || process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
+  if (!proxy) return undefined;
+  // Convert socks5:// to http:// for undici (it handles CONNECT tunneling)
+  const normalized = proxy.replace(/^socks5:\/\//, 'http://');
+  return new ProxyAgent(normalized);
+}
+
+const dispatcher = getDispatcher();
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
 async function fetchJSON(url: string, headers?: Record<string, string>) {
-  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', ...headers } });
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0', ...headers }, ...(dispatcher ? { dispatcher } as any : {}) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
 async function fetchText(url: string) {
-  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, ...(dispatcher ? { dispatcher } as any : {}) });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.text();
 }
