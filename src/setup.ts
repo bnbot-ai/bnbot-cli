@@ -15,9 +15,14 @@ import { homedir } from 'os';
 import { execSync } from 'child_process';
 
 const SKILL_URL = 'https://bnbot.ai/skill.md';
-const COMMANDS_DIR = join(homedir(), '.claude', 'commands');
-const SKILL_PATH = join(COMMANDS_DIR, 'bnbot.md');
 const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln';
+
+// Skill install paths for different agents
+const SKILL_TARGETS = [
+  { name: 'Claude Code', dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
+  { name: 'OpenClaw', dir: join(homedir(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
+  { name: 'Agent Skills', dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
+];
 
 // Detect if terminal supports ANSI colors (not in OpenClaw/chat environments)
 const isTTY = process.stdout.isTTY === true;
@@ -46,7 +51,7 @@ export async function runSetup(): Promise<void> {
     }
   }
 
-  // Step 2: Install Claude skill
+  // Step 2: Install skill to all agent platforms
   console.log('');
   console.log('📝 Installing skill...');
   try {
@@ -54,9 +59,13 @@ export async function runSetup(): Promise<void> {
     if (res.ok) {
       const content = await res.text();
       if (content.startsWith('---')) {
-        mkdirSync(COMMANDS_DIR, { recursive: true });
-        writeFileSync(SKILL_PATH, content);
-        console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code`);
+        for (const target of SKILL_TARGETS) {
+          try {
+            mkdirSync(target.dir, { recursive: true });
+            writeFileSync(join(target.dir, target.file), content);
+          } catch { /* skip if dir not writable */ }
+        }
+        console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code, Codex, or OpenClaw`);
       } else {
         console.log('⚠️  skill.md format unexpected, skipping');
       }

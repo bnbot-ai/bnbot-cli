@@ -16,9 +16,13 @@ const path_1 = require("path");
 const os_1 = require("os");
 const child_process_1 = require("child_process");
 const SKILL_URL = 'https://bnbot.ai/skill.md';
-const COMMANDS_DIR = (0, path_1.join)((0, os_1.homedir)(), '.claude', 'commands');
-const SKILL_PATH = (0, path_1.join)(COMMANDS_DIR, 'bnbot.md');
 const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln';
+// Skill install paths for different agents
+const SKILL_TARGETS = [
+    { name: 'Claude Code', dir: (0, path_1.join)((0, os_1.homedir)(), '.claude', 'commands'), file: 'bnbot.md' },
+    { name: 'OpenClaw', dir: (0, path_1.join)((0, os_1.homedir)(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
+    { name: 'Agent Skills', dir: (0, path_1.join)((0, os_1.homedir)(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
+];
 // Detect if terminal supports ANSI colors (not in OpenClaw/chat environments)
 const isTTY = process.stdout.isTTY === true;
 const bold = (s) => isTTY ? `\x1b[1m${s}\x1b[0m` : s;
@@ -45,7 +49,7 @@ async function runSetup() {
             console.log('⚠️  Global install failed (try: sudo npm i -g @bnbot/cli)');
         }
     }
-    // Step 2: Install Claude skill
+    // Step 2: Install skill to all agent platforms
     console.log('');
     console.log('📝 Installing skill...');
     try {
@@ -53,9 +57,14 @@ async function runSetup() {
         if (res.ok) {
             const content = await res.text();
             if (content.startsWith('---')) {
-                (0, fs_1.mkdirSync)(COMMANDS_DIR, { recursive: true });
-                (0, fs_1.writeFileSync)(SKILL_PATH, content);
-                console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code`);
+                for (const target of SKILL_TARGETS) {
+                    try {
+                        (0, fs_1.mkdirSync)(target.dir, { recursive: true });
+                        (0, fs_1.writeFileSync)((0, path_1.join)(target.dir, target.file), content);
+                    }
+                    catch { /* skip if dir not writable */ }
+                }
+                console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code, Codex, or OpenClaw`);
             }
             else {
                 console.log('⚠️  skill.md format unexpected, skipping');

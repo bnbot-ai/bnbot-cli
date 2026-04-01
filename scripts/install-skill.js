@@ -1,40 +1,36 @@
 #!/usr/bin/env node
 
 /**
- * Post-install: automatically install BNBot skill to Claude Code.
- * Runs after `npm i -g bnbot-cli`.
+ * Post-install: automatically install BNBot skill to all agent platforms.
+ * Runs after `npm i -g @bnbot/cli`.
  */
 
-const { mkdirSync, writeFileSync, existsSync } = require('fs');
+const { mkdirSync, writeFileSync } = require('fs');
 const { join } = require('path');
 const { homedir } = require('os');
 
 const SKILL_URL = 'https://bnbot.ai/skill.md';
-const COMMANDS_DIR = join(homedir(), '.claude', 'commands');
-const SKILL_PATH = join(COMMANDS_DIR, 'bnbot.md');
+const TARGETS = [
+  { dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
+  { dir: join(homedir(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
+  { dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
+];
 
 async function main() {
   try {
-    // Download skill.md
     const res = await fetch(SKILL_URL);
-    if (!res.ok) {
-      // Fallback: network might not be available, skip silently
-      return;
-    }
+    if (!res.ok) return;
     const content = await res.text();
+    if (!content.startsWith('---')) return;
 
-    // Only save if it looks like a valid skill file (starts with ---)
-    if (!content.startsWith('---')) {
-      return;
+    for (const t of TARGETS) {
+      try {
+        mkdirSync(t.dir, { recursive: true });
+        writeFileSync(join(t.dir, t.file), content);
+      } catch {}
     }
-
-    // Create directory and save
-    mkdirSync(COMMANDS_DIR, { recursive: true });
-    writeFileSync(SKILL_PATH, content);
-    console.log('[BNBot] ✅ Skill installed → use /bnbot in Claude Code');
-  } catch {
-    // Silent fail — don't break npm install
-  }
+    console.log('[BNBot] ✅ Skill installed → use /bnbot in Claude Code, Codex, or OpenClaw');
+  } catch {}
 }
 
 main();
