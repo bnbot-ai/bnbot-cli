@@ -235,7 +235,57 @@ export async function navigateNotificationsCommand(): Promise<void> {
 // ── Status & Serve ───────────────────────────────────────────
 
 export async function statusCommand(): Promise<void> {
-  return runCliAction('get_extension_status', {}, getPort());
+  const WebSocket = (await import('ws')).default;
+  const { randomUUID } = await import('crypto');
+  const port = getPort();
+  const requestId = randomUUID();
+
+  return new Promise((resolve) => {
+    const ws = new WebSocket(`ws://127.0.0.1:${port}`);
+    const timer = setTimeout(() => {
+      console.log('');
+      console.log('  🦞 BNBot Status');
+      console.log('  ─────────────────');
+      console.log('  Server    ✗ not running');
+      console.log('  Extension ✗ not connected');
+      console.log('');
+      ws.close();
+      resolve();
+    }, 5000);
+
+    ws.on('open', () => {
+      ws.send(JSON.stringify({ type: 'cli_action', requestId, actionType: 'get_extension_status', actionPayload: {} }));
+    });
+    ws.on('message', (data) => {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg.requestId === requestId) {
+          clearTimeout(timer);
+          const d = msg.data || {};
+          console.log('');
+          console.log('  🦞 BNBot Status');
+          console.log('  ─────────────────');
+          console.log(`  Server    ${msg.success ? '✓' : '✗'} ws://localhost:${d.wsPort || port}`);
+          console.log(`  Extension ${d.connected ? '✓ connected' : '✗ not connected'}${d.extensionVersion ? ` (v${d.extensionVersion})` : ''}`);
+          console.log('');
+          ws.close();
+          resolve();
+        }
+      } catch {}
+    });
+    ws.on('error', () => {
+      clearTimeout(timer);
+      console.log('');
+      console.log('  🦞 BNBot Status');
+      console.log('  ─────────────────');
+      console.log('  Server    ✗ not running');
+      console.log('  Extension ✗ not connected');
+      console.log('');
+      console.log('  Run "bnbot serve" to start the server.');
+      console.log('');
+      resolve();
+    });
+  });
 }
 
 // ── Content fetching (via extension) ─────────────────────────

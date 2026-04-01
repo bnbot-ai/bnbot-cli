@@ -223,7 +223,12 @@ function runCliAction(actionType, params, port) {
                 const msg = JSON.parse(data.toString());
                 if (msg.requestId === requestId && msg.type === 'action_result') {
                     clearTimeout(timeout);
-                    console.log(JSON.stringify(msg, null, 2));
+                    if (msg.success) {
+                        console.log(JSON.stringify(msg.data, null, 2));
+                    }
+                    else {
+                        console.error(msg.error || 'Action failed');
+                    }
                     ws.close();
                     process.exit(msg.success ? 0 : 1);
                 }
