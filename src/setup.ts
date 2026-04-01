@@ -65,7 +65,7 @@ export async function runSetup(): Promise<void> {
             writeFileSync(join(target.dir, target.file), content);
           } catch { /* skip if dir not writable */ }
         }
-        console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code, Codex, or OpenClaw`);
+        console.log('✅ Skill installed');
       } else {
         console.log('⚠️  skill.md format unexpected, skipping');
       }
