@@ -522,7 +522,12 @@ function buildProgram(): Command {
   tiktok.command('fetch <url>').description('Fetch TikTok video info').action(fetchTiktokCommand);
 
   const youtube = program.command('youtube').description('YouTube');
-  youtube.command('search <query>').description('Search YouTube videos').option('-l, --limit <n>', 'Max results', '20').action(youtubeSearchCommand);
+  youtube.command('search <query>').description('Search YouTube videos')
+    .option('-l, --limit <n>', 'Max results', '20')
+    .option('--type <type>', 'Filter: shorts, video, channel, playlist')
+    .option('--upload <period>', 'Upload date: hour, today, week, month, year')
+    .option('--sort <sort>', 'Sort: relevance, date, views, rating')
+    .action(youtubeSearchCommand);
   youtube.command('video <url>').description('Fetch YouTube video info').action(youtubeVideoCommand);
   youtube.command('transcript <url>').description('Fetch YouTube video transcript').action(youtubeTranscriptCommand);
 

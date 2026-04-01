@@ -23,8 +23,11 @@ export async function tiktokExploreCommand(options: { limit?: string }) {
 
 // ── YouTube ──────────────────────────────────────────────────
 
-export async function youtubeSearchCommand(query: string, options: { limit?: string }) {
-  await scrape('SCRAPER_SEARCH_YOUTUBE', { query, limit: parseInt(options.limit || '20', 10) });
+export async function youtubeSearchCommand(query: string, options: { limit?: string; type?: string; upload?: string; sort?: string }) {
+  await scrape('SCRAPER_SEARCH_YOUTUBE', {
+    query, limit: parseInt(options.limit || '20', 10),
+    type: options.type || '', upload: options.upload || '', sort: options.sort || '',
+  });
 }
 
 export async function youtubeVideoCommand(url: string) {

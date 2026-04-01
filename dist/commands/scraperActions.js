@@ -53,7 +53,10 @@ async function tiktokExploreCommand(options) {
 }
 // ── YouTube ──────────────────────────────────────────────────
 async function youtubeSearchCommand(query, options) {
-    await scrape('SCRAPER_SEARCH_YOUTUBE', { query, limit: parseInt(options.limit || '20', 10) });
+    await scrape('SCRAPER_SEARCH_YOUTUBE', {
+        query, limit: parseInt(options.limit || '20', 10),
+        type: options.type || '', upload: options.upload || '', sort: options.sort || '',
+    });
 }
 async function youtubeVideoCommand(url) {
     await scrape('SCRAPER_FETCH_YOUTUBE_VIDEO', { url });

@@ -419,7 +419,12 @@ function buildProgram() {
     tiktok.command('explore').description('Trending TikTok videos').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.tiktokExploreCommand);
     tiktok.command('fetch <url>').description('Fetch TikTok video info').action(actions_js_1.fetchTiktokCommand);
     const youtube = program.command('youtube').description('YouTube');
-    youtube.command('search <query>').description('Search YouTube videos').option('-l, --limit <n>', 'Max results', '20').action(scraperActions_js_1.youtubeSearchCommand);
+    youtube.command('search <query>').description('Search YouTube videos')
+        .option('-l, --limit <n>', 'Max results', '20')
+        .option('--type <type>', 'Filter: shorts, video, channel, playlist')
+        .option('--upload <period>', 'Upload date: hour, today, week, month, year')
+        .option('--sort <sort>', 'Sort: relevance, date, views, rating')
+        .action(scraperActions_js_1.youtubeSearchCommand);
     youtube.command('video <url>').description('Fetch YouTube video info').action(scraperActions_js_1.youtubeVideoCommand);
     youtube.command('transcript <url>').description('Fetch YouTube video transcript').action(scraperActions_js_1.youtubeTranscriptCommand);
     const reddit = program.command('reddit').description('Reddit');

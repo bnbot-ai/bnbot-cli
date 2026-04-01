@@ -10,6 +10,9 @@ export declare function tiktokExploreCommand(options: {
 }): Promise<void>;
 export declare function youtubeSearchCommand(query: string, options: {
     limit?: string;
+    type?: string;
+    upload?: string;
+    sort?: string;
 }): Promise<void>;
 export declare function youtubeVideoCommand(url: string): Promise<void>;
 export declare function youtubeTranscriptCommand(url: string): Promise<void>;
