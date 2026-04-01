@@ -94,8 +94,8 @@ export const PUBLIC_SCRAPERS: Record<string, (params: Record<string, unknown>) =
 
   'search-sinablog': async (p) => {
     const data = await fetchJSON(`https://search.sina.com.cn/api/search?q=${encodeURIComponent(String(p.query))}&tp=mix&sort=0&page=1&size=${Math.max(Number(p.limit) || 20, 10)}&from=search_result`, { Accept: 'application/json' });
-    return (data.data?.list || []).filter((i: any) => (i.url || '').includes('blog.sina.com.cn')).slice(0, Number(p.limit) || 20).map((i: any, idx: number) => ({
-      rank: idx + 1, title: (i.title || '').replace(/<[^>]+>/g, ''), author: i.media_show || i.author, date: i.time, url: i.url,
+    return (data.data?.list || []).slice(0, Number(p.limit) || 20).map((i: any, idx: number) => ({
+      rank: idx + 1, title: (i.title || '').replace(/<[^>]+>/g, ''), author: i.media_show || i.author, date: i.time, description: (i.intro || i.searchSummary || '').replace(/<[^>]+>/g, '').trim().slice(0, 150), url: i.url,
     }));
   },
 
