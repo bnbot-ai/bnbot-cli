@@ -21,7 +21,7 @@ const SKILL_PATH = (0, path_1.join)(COMMANDS_DIR, 'bnbot.md');
 const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln';
 async function runSetup() {
     console.log('');
-    console.log('🦞 \x1b[1m\x1b[31mBNBot Setup\x1b[0m');
+    console.log('🦞 \x1b[1mBNBot Setup\x1b[0m');
     console.log('');
     // Step 1: Install globally
     try {
