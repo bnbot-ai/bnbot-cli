@@ -78,31 +78,83 @@ async function runSetup() {
         console.log('⚠️  Could not download skill.md (network error)');
         console.log('   Manual: curl -o ~/.claude/commands/bnbot.md ' + SKILL_URL);
     }
-    // Step 3: Start server in background
+    // Step 3: Start server and check extension connection
     console.log('');
     console.log('🚀 Starting server...');
-    try {
-        const { spawn } = await import('child_process');
-        const child = spawn(process.execPath, [process.argv[1], 'serve'], {
-            detached: true,
-            stdio: 'ignore',
+    const DEFAULT_PORT = 18900;
+    let extensionConnected = false;
+    // Check if server already running
+    const { default: WS } = await import('ws');
+    const serverAlive = await new Promise((resolve) => {
+        const ws = new WS(`ws://127.0.0.1:${DEFAULT_PORT}`);
+        const t = setTimeout(() => { ws.close(); resolve(false); }, 1000);
+        ws.on('open', () => { clearTimeout(t); ws.close(); resolve(true); });
+        ws.on('error', () => { clearTimeout(t); resolve(false); });
+    });
+    if (!serverAlive) {
+        try {
+            const { spawn } = await import('child_process');
+            const child = spawn(process.execPath, [process.argv[1], 'serve'], {
+                detached: true,
+                stdio: 'ignore',
+            });
+            child.unref();
+            // Wait for server to start
+            for (let i = 0; i < 10; i++) {
+                await new Promise(r => setTimeout(r, 500));
+                const ok = await new Promise((resolve) => {
+                    const ws = new WS(`ws://127.0.0.1:${DEFAULT_PORT}`);
+                    const t = setTimeout(() => { ws.close(); resolve(false); }, 500);
+                    ws.on('open', () => { clearTimeout(t); ws.close(); resolve(true); });
+                    ws.on('error', () => { clearTimeout(t); resolve(false); });
+                });
+                if (ok)
+                    break;
+            }
+        }
+        catch { }
+    }
+    console.log('✅ Server running (ws://localhost:18900)');
+    // Check extension connection
+    await new Promise((resolve) => {
+        const ws = new WS(`ws://127.0.0.1:${DEFAULT_PORT}`);
+        const t = setTimeout(() => { ws.close(); resolve(); }, 3000);
+        ws.on('open', () => {
+            ws.send(JSON.stringify({ type: 'cli_action', requestId: 'setup-check', actionType: 'get_extension_status', actionPayload: {} }));
         });
-        child.unref();
-        console.log('✅ Server running in background (ws://localhost:18900)');
+        ws.on('message', (data) => {
+            try {
+                const msg = JSON.parse(data.toString());
+                if (msg.requestId === 'setup-check' && msg.data?.connected) {
+                    extensionConnected = true;
+                }
+            }
+            catch { }
+            clearTimeout(t);
+            ws.close();
+            resolve();
+        });
+        ws.on('error', () => { clearTimeout(t); resolve(); });
+    });
+    if (extensionConnected) {
+        console.log('✅ Chrome Extension connected');
     }
-    catch {
-        console.log('⚠️  Could not start server. Run manually: bnbot serve');
+    else {
+        console.log('');
+        console.log('🌐 Chrome Extension not connected:');
+        console.log(`   ${link(CHROME_URL)}`);
     }
-    // Step 4: Chrome extension reminder
-    console.log('');
-    console.log('🌐 Chrome Extension:');
-    console.log(`   ${link(CHROME_URL)}`);
     // Done
     console.log('');
-    console.log('🎉 Setup complete! Next steps:');
-    console.log('   1. Install the Chrome extension (link above)');
-    console.log(`   2. Use ${red('/bnbot')} in your AI agent (Claude Code, Codex, OpenClaw)`);
-    console.log(`   3. Or run: ${red('bnbot --help')}`);
+    console.log('🎉 Setup complete!');
+    if (!extensionConnected) {
+        console.log('   1. Install the Chrome extension (link above)');
+        console.log(`   2. Use ${red('/bnbot')} in your AI agent (Claude Code, Codex, OpenClaw)`);
+    }
+    else {
+        console.log(`   Use ${red('/bnbot')} in your AI agent (Claude Code, Codex, OpenClaw)`);
+    }
+    console.log(`   Or run: ${red('bnbot --help')}`);
     console.log('');
 }
 //# sourceMappingURL=setup.js.map
