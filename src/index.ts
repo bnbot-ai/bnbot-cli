@@ -22,6 +22,7 @@ if (process.argv.includes('--version') || process.argv.includes('-v')) {
 
 import { BnbotWsServer } from './wsServer.js';
 import { CLI_TOOL_NAMES, runCliTool } from './cli.js';
+import { PUBLIC_SCRAPER_NAMES, runPublicScraper } from './publicScrapers.js';
 
 const DEFAULT_PORT = 18900;
 
@@ -78,6 +79,19 @@ AVAILABLE TOOLS:
     fetch-wechat-article         Fetch WeChat article (--url url)
     fetch-tiktok-video           Fetch TikTok video (--url url)
     fetch-xiaohongshu-note       Fetch Xiaohongshu note (--url url)
+
+  Public Data (no extension needed):
+    search-hackernews            Search Hacker News (--query "..." [--limit N])
+    search-stackoverflow         Search Stack Overflow (--query "...")
+    search-wikipedia             Search Wikipedia (--query "..." [--lang en])
+    search-apple-podcasts        Search Apple Podcasts (--query "...")
+    search-substack              Search Substack posts (--query "...")
+    search-sinablog              Search Sina Blog (--query "...")
+    fetch-sinafinance-news       Sina Finance 7x24 news ([--limit N] [--type 0-9])
+    fetch-v2ex-hot               V2EX hot topics
+    fetch-bloomberg-news         Bloomberg news headlines (RSS)
+    fetch-bbc-news               BBC news headlines (RSS)
+    fetch-xiaoyuzhou-podcast     Xiaoyuzhou podcast info (--podcastId ID)
 
   Article:
     open-article-editor          Open article editor
@@ -160,6 +174,24 @@ async function main(): Promise<void> {
 
   if (subcommand === 'serve') {
     await runServe(port);
+    return;
+  }
+
+  // Public scraper mode: direct fetch, no WebSocket needed
+  if (subcommand && PUBLIC_SCRAPER_NAMES.includes(subcommand)) {
+    const toolArgIndex = args.indexOf(subcommand);
+    const toolArgs = args.slice(toolArgIndex + 1);
+    // Parse --key value flags into params
+    const params: Record<string, unknown> = {};
+    for (let i = 0; i < toolArgs.length; i++) {
+      if (toolArgs[i].startsWith('--') && toolArgs[i + 1] && !toolArgs[i + 1].startsWith('--')) {
+        const key = toolArgs[i].slice(2);
+        const val = toolArgs[i + 1];
+        params[key] = isNaN(Number(val)) ? val : Number(val);
+        i++;
+      }
+    }
+    await runPublicScraper(subcommand, params);
     return;
   }
 

@@ -61,9 +61,12 @@ export class BnbotWsServer {
 
       this.wss.on('error', (error: NodeJS.ErrnoException) => {
         if (error.code === 'EADDRINUSE') {
-          console.error(`[BNBOT] Port ${this.port} is already in use. Another instance may be running.`);
+          console.error(`[BNBOT] Port ${this.port} is already in use. Continuing without WebSocket server (public API tools still work).`);
+          this.wss = null;
+          resolve(); // non-fatal: tools that don't need extension still work
+        } else {
+          reject(error);
         }
-        reject(error);
       });
 
       this.wss.on('connection', (ws) => {
