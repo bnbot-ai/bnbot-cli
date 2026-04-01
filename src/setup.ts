@@ -21,6 +21,7 @@ const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkcko
 const SKILL_TARGETS = [
   { name: 'Claude Code', dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
   { name: 'OpenClaw', dir: join(homedir(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
+  { name: 'Codex', dir: join(homedir(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
   { name: 'Agent Skills', dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 
