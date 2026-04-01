@@ -87,6 +87,11 @@ function buildProgram() {
         .command('status')
         .description('Check extension connection status')
         .action(actions_js_1.statusCommand);
+    program
+        .command('close-compose-window')
+        .description('Close tweet composer')
+        .option('-s, --save', 'Save as draft instead of discarding')
+        .action(actions_js_1.closeCommand);
     // ── X platform commands ────────────────────────────────
     const x = program
         .command('x')

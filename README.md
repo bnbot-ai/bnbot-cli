@@ -53,6 +53,8 @@ bnbot x delete <url>                           # Delete a tweet
 bnbot x bookmark <url>                         # Bookmark
 bnbot x unbookmark <url>                       # Unbookmark
 bnbot x close                                  # Close composer
+bnbot close-compose-window                     # Close composer directly
+bnbot close-compose-window --save              # Save draft and close
 ```
 
 ### X Platform — Scrape
