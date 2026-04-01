@@ -31,6 +31,7 @@ function printHelp(): void {
 BNBot - Control Twitter/X via CLI
 
 USAGE:
+  bnbot setup                    One-command install (CLI + Claude skill)
   bnbot                          Start WebSocket server (default)
   bnbot serve [--port PORT]      Start WebSocket server (explicit)
   bnbot login [--email EMAIL]    Login to BNBot (auto-detects clawmoney API key)
@@ -165,6 +166,12 @@ async function main(): Promise<void> {
   // Find the first non-flag argument as the subcommand
   const subcommand = args.find((a) => !a.startsWith('-'));
   const port = parsePort(args);
+
+  if (subcommand === 'setup') {
+    const { runSetup } = await import('./setup.js');
+    await runSetup();
+    return;
+  }
 
   if (subcommand === 'login') {
     const { runLogin } = await import('./auth.js');

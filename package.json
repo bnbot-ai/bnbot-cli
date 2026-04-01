@@ -1,6 +1,6 @@
 {
-  "name": "bnbot-cli",
-  "version": "2.7.1",
+  "name": "@bnbot/cli",
+  "version": "0.1.0",
   "description": "CLI for BNBot Chrome Extension - Automate Twitter/X from your terminal",
   "main": "dist/index.js",
   "bin": {
@@ -12,7 +12,8 @@
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node scripts/install-skill.js"
   },
   "keywords": [
     "mcp",
@@ -28,6 +29,9 @@
   },
   "homepage": "https://github.com/bnbot-ai/bnbot-cli",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "undici": "^7.24.6",

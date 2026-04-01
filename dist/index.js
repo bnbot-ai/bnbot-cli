@@ -21,12 +21,14 @@ if (process.argv.includes('--version') || process.argv.includes('-v')) {
 }
 const wsServer_js_1 = require("./wsServer.js");
 const cli_js_1 = require("./cli.js");
+const publicScrapers_js_1 = require("./publicScrapers.js");
 const DEFAULT_PORT = 18900;
 function printHelp() {
     const help = `
 BNBot - Control Twitter/X via CLI
 
 USAGE:
+  bnbot setup                    One-command install (CLI + Claude skill)
   bnbot                          Start WebSocket server (default)
   bnbot serve [--port PORT]      Start WebSocket server (explicit)
   bnbot login [--email EMAIL]    Login to BNBot (auto-detects clawmoney API key)
@@ -75,6 +77,19 @@ AVAILABLE TOOLS:
     fetch-wechat-article         Fetch WeChat article (--url url)
     fetch-tiktok-video           Fetch TikTok video (--url url)
     fetch-xiaohongshu-note       Fetch Xiaohongshu note (--url url)
+
+  Public Data (no extension needed):
+    search-hackernews            Search Hacker News (--query "..." [--limit N])
+    search-stackoverflow         Search Stack Overflow (--query "...")
+    search-wikipedia             Search Wikipedia (--query "..." [--lang en])
+    search-apple-podcasts        Search Apple Podcasts (--query "...")
+    search-substack              Search Substack posts (--query "...")
+    search-sinablog              Search Sina Blog (--query "...")
+    fetch-sinafinance-news       Sina Finance 7x24 news ([--limit N] [--type 0-9])
+    fetch-v2ex-hot               V2EX hot topics
+    fetch-bloomberg-news         Bloomberg news headlines (RSS)
+    fetch-bbc-news               BBC news headlines (RSS)
+    fetch-xiaoyuzhou-podcast     Xiaoyuzhou podcast info (--podcastId ID)
 
   Article:
     open-article-editor          Open article editor
@@ -140,6 +155,11 @@ async function main() {
     // Find the first non-flag argument as the subcommand
     const subcommand = args.find((a) => !a.startsWith('-'));
     const port = parsePort(args);
+    if (subcommand === 'setup') {
+        const { runSetup } = await import('./setup.js');
+        await runSetup();
+        return;
+    }
     if (subcommand === 'login') {
         const { runLogin } = await import('./auth.js');
         await runLogin(args);
@@ -147,6 +167,23 @@ async function main() {
     }
     if (subcommand === 'serve') {
         await runServe(port);
+        return;
+    }
+    // Public scraper mode: direct fetch, no WebSocket needed
+    if (subcommand && publicScrapers_js_1.PUBLIC_SCRAPER_NAMES.includes(subcommand)) {
+        const toolArgIndex = args.indexOf(subcommand);
+        const toolArgs = args.slice(toolArgIndex + 1);
+        // Parse --key value flags into params
+        const params = {};
+        for (let i = 0; i < toolArgs.length; i++) {
+            if (toolArgs[i].startsWith('--') && toolArgs[i + 1] && !toolArgs[i + 1].startsWith('--')) {
+                const key = toolArgs[i].slice(2);
+                const val = toolArgs[i + 1];
+                params[key] = isNaN(Number(val)) ? val : Number(val);
+                i++;
+            }
+        }
+        await (0, publicScrapers_js_1.runPublicScraper)(subcommand, params);
         return;
     }
     // CLI tool mode: if the subcommand matches a known tool name
