@@ -45,6 +45,8 @@ bnbot x thread '[{"text":"First tweet"},{"text":"Second tweet"}]'
 # Close composer
 bnbot x close
 bnbot x close --save  # Save as draft
+bnbot close-compose-window
+bnbot close-compose-window --save  # Save as draft
 ```
 
 ### Engage

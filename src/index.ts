@@ -144,6 +144,12 @@ function buildProgram(): Command {
     .description('Check extension connection status')
     .action(statusCommand);
 
+  program
+    .command('close-compose-window')
+    .description('Close tweet composer')
+    .option('-s, --save', 'Save as draft instead of discarding')
+    .action(closeCommand);
+
   // ── X platform commands ────────────────────────────────
 
   const x = program

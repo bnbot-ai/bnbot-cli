@@ -38,6 +38,7 @@ const TOOL_MAP: Record<string, string> = {
   // Tweet
   'post-tweet': 'post_tweet',
   'post-thread': 'post_thread',
+  'close-compose-window': 'close_composer',
   'submit-reply': 'submit_reply',
   'quote-tweet': 'quote_tweet',
   // Engagement
