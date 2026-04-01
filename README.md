@@ -1,8 +1,16 @@
-# bnbot-cli
+# @bnbot/cli
 
-**BNBot (Brand & Bot)** — AI-powered personal brand and social media automation. Helps you run your personal brand and social accounts from the terminal. Currently supports X (Twitter), more platforms coming soon.
+**BNBot (Brand & Bot)** — AI-powered personal branding toolkit for X. Discover trends from 30+ platforms, create content with AI, and automate your growth.
 
-Powered by [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln).
+## Quick Start
+
+```bash
+npx @bnbot/cli setup
+```
+
+This installs the CLI globally and sets up the Claude Code skill (`/bnbot`).
+
+Then install the [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln) for browser automation.
 
 ## Architecture
 
@@ -11,104 +19,74 @@ Terminal
     → bnbot <command> [args]
     ↓ WebSocket (ws://localhost:18900)
 BNBot Chrome Extension
-    ↓ DOM / GraphQL API / CDP
-Twitter/X (and 40+ platforms via opencli)
-```
-
-BNBot Extension has a built-in [OpenCLI](https://github.com/jackwener/opencli) bridge — no need to install the opencli extension separately. Install `opencli` CLI and BNBot Extension handles the rest.
-
-## Install
-
-```bash
-npm install -g bnbot-cli
-```
-
-Install the [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln) and enable the **OpenClaw** toggle in Settings.
-
-### Optional: OpenCLI (40+ platform support)
-
-```bash
-npm install -g @jackwener/opencli
-```
-
-With opencli installed, BNBot Extension acts as the browser bridge for both tools. One extension, two CLIs.
-
-```bash
-# BNBot commands (Twitter/X)
-bnbot scrape user-tweets elonmusk -l 20
-
-# OpenCLI commands (TikTok, YouTube, Reddit, etc.)
-opencli tiktok explore --limit 10
-opencli youtube search "AI agents" --limit 5
-```
-
-## Quick Start
-
-```bash
-# Start the server
-bnbot
-
-# Scrape & publish
-bnbot scrape user-tweets elonmusk -l 10
-bnbot tweet post "Hello from BNBot!" --media image.png
-bnbot scrape search "AI agents" -t top -l 20
+    ↓ chrome.scripting / DOM / Internal APIs
+X + 30 platforms (TikTok, YouTube, Reddit, Bilibili, etc.)
 ```
 
 ## Commands
 
-### Scrape
-
-| Command | Description | Key Params |
-|---------|-------------|------------|
-| `scrape user-tweets <username>` | Scrape a user's tweets | `-l 50` `--scrollAttempts 5` |
-| `scrape user-profile <username>` | Get user profile info | |
-| `scrape search <query>` | Search and scrape tweets | `-t top` `-l 20` |
-| `scrape timeline` | Scrape home timeline | `-l 20` |
-| `scrape bookmarks` | Scrape bookmarked tweets | `-l 20` |
-| `scrape thread <url>` | Scrape a tweet thread | |
-
-#### Advanced Search
-
-```bash
-bnbot scrape search "AI" \
-  --from elonmusk \
-  --since 2026-03-01 \
-  --until 2026-03-30 \
-  --lang en \
-  --minLikes 100 \
-  --has images \
-  -t latest \
-  -l 50
-```
-
-### Tweet
-
-| Command | Description | Key Params |
-|---------|-------------|------------|
-| `tweet post <text>` | Post a tweet | `-m image.png` `-d` (draft) |
-| `tweet close` | Close composer | `-s` (save draft) |
-
-Draft mode fills the composer without posting:
-
-```bash
-bnbot tweet post "Review before posting" -d -m cover.png
-```
-
-### Engagement
+### Setup & Status
 
 | Command | Description |
 |---------|-------------|
-| `like <url>` | Like a tweet |
-| `retweet <url>` | Retweet |
-| `reply <url> <text>` | Reply to a tweet |
-| `follow <username>` | Follow a user |
+| `bnbot setup` | Install CLI + Claude skill |
+| `bnbot serve` | Start WebSocket server |
+| `bnbot login` | Login to BNBot |
+| `bnbot --help` | Show all commands |
 
-### Status
+### Scrape (via Chrome Extension)
 
 | Command | Description |
 |---------|-------------|
-| `status` | Check extension connection |
-| `serve` | Start bridge server (`-p 9999` for custom port) |
+| `scrape-timeline` | Scrape home timeline |
+| `scrape-search-results --query "AI"` | Search and scrape tweets |
+| `scrape-user-profile --username elonmusk` | Get user profile |
+| `scrape-user-tweets --username elonmusk` | Scrape user's tweets |
+| `scrape-bookmarks` | Scrape bookmarked tweets |
+| `scrape-thread --tweetUrl <url>` | Scrape a tweet thread |
+| `account-analytics` | Get account analytics |
+
+### Tweet & Engage (via Chrome Extension)
+
+| Command | Description |
+|---------|-------------|
+| `post-tweet --text "Hello!"` | Post a tweet |
+| `post-thread --tweets '[...]'` | Post a thread |
+| `submit-reply --text "..."` | Reply to current tweet |
+| `like-tweet` | Like current tweet |
+| `retweet` | Retweet |
+| `follow-user --username handle` | Follow a user |
+
+### Public Data (direct fetch, no extension needed)
+
+| Command | Description |
+|---------|-------------|
+| `search-hackernews --query "AI"` | Search Hacker News |
+| `search-stackoverflow --query "react"` | Search Stack Overflow |
+| `search-wikipedia --query "ChatGPT"` | Search Wikipedia |
+| `search-apple-podcasts --query "tech"` | Search Apple Podcasts |
+| `search-substack --query "AI"` | Search Substack |
+| `fetch-v2ex-hot` | V2EX hot topics |
+| `fetch-bbc-news` | BBC news headlines |
+| `fetch-bloomberg-news` | Bloomberg news |
+| `fetch-sinafinance-news` | Sina Finance 7x24 |
+| `search-sinablog --query "AI"` | Search Sina Blog |
+| `fetch-xiaoyuzhou-podcast --podcastId <id>` | Xiaoyuzhou podcast info |
+
+### Content (via Chrome Extension)
+
+| Command | Description |
+|---------|-------------|
+| `fetch-wechat-article --url <url>` | Fetch WeChat article |
+| `fetch-tiktok-video --url <url>` | Fetch TikTok video |
+| `fetch-xiaohongshu-note --url <url>` | Fetch Xiaohongshu note |
+
+### Article
+
+| Command | Description |
+|---------|-------------|
+| `create-article --title "..." --content "..."` | Create long-form article |
+| `open-article-editor` | Open article editor |
 
 ## Login
 
@@ -120,17 +98,10 @@ bnbot login
 bnbot login --email you@example.com
 ```
 
-## OpenCLI Bridge
-
-BNBot Extension includes a built-in opencli-compatible browser bridge. When `opencli` CLI is installed, it automatically connects through BNBot Extension instead of needing the separate opencli Browser Bridge extension.
-
-Supported platforms via opencli: TikTok, YouTube, Reddit, Bilibili, Instagram, LinkedIn, Twitter, and [40+ more](https://github.com/jackwener/opencli/blob/main/docs/adapters/index.md).
-
 ## Links
 
-- [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot-your-ai-growth-agen/haammgigdkckogcgnbkigfleejpaiiln)
-- [bnbot-editor](https://github.com/jackleeio/bnbot-editor) — AI social media editor skill for Claude Code
-- [OpenCLI](https://github.com/jackwener/opencli) — 40+ platform CLI (uses BNBot Extension as bridge)
+- [BNBot Chrome Extension](https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln)
+- [BNBot Website](https://bnbot.ai)
 - Twitter: [@BNBOT_AI](https://x.com/BNBOT_AI)
 
 ## License
