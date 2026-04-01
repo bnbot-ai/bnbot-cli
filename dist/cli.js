@@ -201,7 +201,7 @@ function runCliAction(actionType, params, port) {
         }
         catch {
             console.error(`Failed to connect to BNBot server at ${url}`);
-            console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
+            console.error('Make sure "bnbot serve" is running first.');
             process.exit(1);
             return;
         }
@@ -240,7 +240,7 @@ function runCliAction(actionType, params, port) {
         ws.on('error', (err) => {
             clearTimeout(timeout);
             console.error(`Connection error: ${err.message}`);
-            console.error('Make sure "bnbot serve" or "bnbot mcp" is running first.');
+            console.error('Make sure "bnbot serve" is running first.');
             process.exit(1);
         });
         ws.on('close', () => {

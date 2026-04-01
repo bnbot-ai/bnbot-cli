@@ -65,7 +65,7 @@ export async function runSetup(): Promise<void> {
   // Step 3: Chrome extension reminder
   console.log('');
   console.log('🌐 Chrome Extension:');
-  console.log('   ' + CHROME_URL);
+  console.log('   \x1b[4m\x1b[36m' + CHROME_URL + '\x1b[0m');
 
   // Done
   console.log('');

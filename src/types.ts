@@ -1,8 +1,8 @@
 /**
- * Shared types for BNBOT MCP Server
+ * Shared types for BNBOT WebSocket Server
  */
 
-/** Message from MCP Server → Extension */
+/** Message from Server → Extension */
 export interface ActionRequest {
   type: 'action';
   requestId: string;
@@ -10,7 +10,7 @@ export interface ActionRequest {
   actionPayload: Record<string, unknown>;
 }
 
-/** Message from Extension → MCP Server */
+/** Message from Extension → Server */
 export interface ActionResult {
   type: 'action_result';
   requestId: string;

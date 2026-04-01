@@ -82,7 +82,7 @@ class BnbotWsServer {
                         this.client = null;
                         this.extensionVersion = null;
                         this.autoLoginDone = false;
-                        // Reject all pending MCP requests
+                        // Reject all pending requests
                         for (const [id, pending] of this.pendingRequests) {
                             clearTimeout(pending.timer);
                             pending.reject(new Error('Extension disconnected'));

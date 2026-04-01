@@ -1,12 +1,11 @@
 {
   "name": "@bnbot/cli",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "AI-powered personal branding toolkit for X. Discover trends, create content, automate growth.",
   "main": "dist/index.js",
   "bin": {
     "bnbot": "dist/index.js",
-    "bnbot-cli": "dist/index.js",
-    "bnbot-mcp-server": "dist/index.js"
+    "bnbot-cli": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
@@ -16,7 +15,6 @@
     "postinstall": "node scripts/install-skill.js"
   },
   "keywords": [
-    "mcp",
     "bnbot",
     "twitter",
     "chrome-extension",
@@ -33,11 +31,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
     "commander": "^14.0.3",
     "undici": "^7.24.6",
-    "ws": "^8.18.0",
-    "zod": "^3.24.2"
+    "ws": "^8.18.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
