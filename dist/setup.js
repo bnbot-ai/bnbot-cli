@@ -2,7 +2,7 @@
 /**
  * BNBot Setup — one command to install everything.
  *
- * Usage: npx bnbot-cli setup
+ * Usage: npx @bnbot/cli setup
  *
  * What it does:
  * 1. Install bnbot-cli globally (if not already)
@@ -19,9 +19,14 @@ const SKILL_URL = 'https://bnbot.ai/skill.md';
 const COMMANDS_DIR = (0, path_1.join)((0, os_1.homedir)(), '.claude', 'commands');
 const SKILL_PATH = (0, path_1.join)(COMMANDS_DIR, 'bnbot.md');
 const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkckogcgnbkigfleejpaiiln';
+// Detect if terminal supports ANSI colors (not in OpenClaw/chat environments)
+const isTTY = process.stdout.isTTY === true;
+const bold = (s) => isTTY ? `\x1b[1m${s}\x1b[0m` : s;
+const red = (s) => isTTY ? `\x1b[1m\x1b[31m${s}\x1b[0m` : s;
+const link = (s) => isTTY ? `\x1b[4m\x1b[31m${s}\x1b[0m` : s;
 async function runSetup() {
     console.log('');
-    console.log('🦞 \x1b[1mBNBot Setup\x1b[0m');
+    console.log(`🦞 ${bold('BNBot Setup')}`);
     console.log('');
     // Step 1: Install globally
     try {
@@ -33,16 +38,16 @@ async function runSetup() {
     catch {
         console.log('📦 Installing bnbot-cli globally...');
         try {
-            (0, child_process_1.execSync)('npm i -g bnbot-cli', { stdio: 'inherit' });
+            (0, child_process_1.execSync)('npm i -g @bnbot/cli', { stdio: 'inherit' });
             console.log('✅ bnbot-cli installed');
         }
         catch {
-            console.log('⚠️  Global install failed (try: sudo npm i -g bnbot-cli)');
+            console.log('⚠️  Global install failed (try: sudo npm i -g @bnbot/cli)');
         }
     }
     // Step 2: Install Claude skill
     console.log('');
-    console.log('📝 Installing Claude Code skill...');
+    console.log('📝 Installing skill...');
     try {
         const res = await fetch(SKILL_URL);
         if (res.ok) {
@@ -50,7 +55,7 @@ async function runSetup() {
             if (content.startsWith('---')) {
                 (0, fs_1.mkdirSync)(COMMANDS_DIR, { recursive: true });
                 (0, fs_1.writeFileSync)(SKILL_PATH, content);
-                console.log('✅ Skill installed → use \x1b[1m\x1b[31m/bnbot\x1b[0m in Claude Code');
+                console.log(`✅ Skill installed → use ${red('/bnbot')} in Claude Code`);
             }
             else {
                 console.log('⚠️  skill.md format unexpected, skipping');
@@ -67,13 +72,13 @@ async function runSetup() {
     // Step 3: Chrome extension reminder
     console.log('');
     console.log('🌐 Chrome Extension:');
-    console.log('   \x1b[4m\x1b[31m' + CHROME_URL + '\x1b[0m');
+    console.log(`   ${link(CHROME_URL)}`);
     // Done
     console.log('');
     console.log('🎉 Setup complete! Next steps:');
     console.log('   1. Install the Chrome extension (link above)');
-    console.log('   2. Use \x1b[1m\x1b[31m/bnbot\x1b[0m in your AI agent (Claude Code, Codex, OpenClaw)');
-    console.log('   3. Or run: \x1b[1m\x1b[31mbnbot --help\x1b[0m');
+    console.log(`   2. Use ${red('/bnbot')} in your AI agent (Claude Code, Codex, OpenClaw)`);
+    console.log(`   3. Or run: ${red('bnbot --help')}`);
     console.log('');
 }
 //# sourceMappingURL=setup.js.map

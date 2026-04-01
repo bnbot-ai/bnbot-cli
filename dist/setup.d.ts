@@ -1,7 +1,7 @@
 /**
  * BNBot Setup — one command to install everything.
  *
- * Usage: npx bnbot-cli setup
+ * Usage: npx @bnbot/cli setup
  *
  * What it does:
  * 1. Install bnbot-cli globally (if not already)
