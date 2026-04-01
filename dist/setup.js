@@ -50,7 +50,7 @@ async function runSetup() {
             if (content.startsWith('---')) {
                 (0, fs_1.mkdirSync)(COMMANDS_DIR, { recursive: true });
                 (0, fs_1.writeFileSync)(SKILL_PATH, content);
-                console.log('✅ Skill installed → use /bnbot in Claude Code');
+                console.log('✅ Skill installed → use \x1b[1m\x1b[31m/bnbot\x1b[0m in Claude Code');
             }
             else {
                 console.log('⚠️  skill.md format unexpected, skipping');
@@ -72,8 +72,8 @@ async function runSetup() {
     console.log('');
     console.log('🎉 Setup complete! Next steps:');
     console.log('   1. Install the Chrome extension (link above)');
-    console.log('   2. Open Claude Code and type /bnbot');
-    console.log('   3. Or run: bnbot --help');
+    console.log('   2. Use \x1b[1m\x1b[31m/bnbot\x1b[0m in your AI agent (Claude Code, Codex, OpenClaw)');
+    console.log('   3. Or run: \x1b[1m\x1b[31mbnbot --help\x1b[0m');
     console.log('');
 }
 //# sourceMappingURL=setup.js.map
