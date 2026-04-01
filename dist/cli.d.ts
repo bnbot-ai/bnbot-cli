@@ -18,6 +18,7 @@ export declare const CLI_TOOL_NAMES: string[];
 export declare function runCliTool(toolName: string, argv: string[]): Promise<void>;
 /**
  * Send an action to the WS server and print the result.
+ * Auto-starts server if not running.
  */
 export declare function runCliAction(actionType: string, params: Record<string, unknown>, port: number): Promise<void>;
 //# sourceMappingURL=cli.d.ts.map

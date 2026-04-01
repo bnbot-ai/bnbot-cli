@@ -189,9 +189,45 @@ async function runCliTool(toolName, argv) {
     return runCliAction(actionType, params, port);
 }
 /**
- * Send an action to the WS server and print the result.
+ * Auto-start bnbot serve if not running.
  */
-function runCliAction(actionType, params, port) {
+async function ensureServer(port) {
+    const alive = await new Promise((resolve) => {
+        const ws = new ws_1.default(`ws://127.0.0.1:${port}`);
+        const t = setTimeout(() => { ws.close(); resolve(false); }, 1000);
+        ws.on('open', () => { clearTimeout(t); ws.close(); resolve(true); });
+        ws.on('error', () => { clearTimeout(t); resolve(false); });
+    });
+    if (alive)
+        return;
+    // Start server in background
+    const { spawn } = await import('child_process');
+    const child = spawn(process.execPath, [process.argv[1], 'serve', '--port', String(port)], {
+        detached: true,
+        stdio: 'ignore',
+    });
+    child.unref();
+    console.error('[BNBOT] Starting server in background...');
+    // Wait for server to be ready (up to 10s)
+    for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        const ok = await new Promise((resolve) => {
+            const ws = new ws_1.default(`ws://127.0.0.1:${port}`);
+            const t = setTimeout(() => { ws.close(); resolve(false); }, 500);
+            ws.on('open', () => { clearTimeout(t); ws.close(); resolve(true); });
+            ws.on('error', () => { clearTimeout(t); resolve(false); });
+        });
+        if (ok)
+            return;
+    }
+    console.error('[BNBOT] Server started. Waiting for extension connection...');
+}
+/**
+ * Send an action to the WS server and print the result.
+ * Auto-starts server if not running.
+ */
+async function runCliAction(actionType, params, port) {
+    await ensureServer(port);
     return new Promise((resolve) => {
         const url = `ws://127.0.0.1:${port}`;
         const requestId = (0, crypto_1.randomUUID)();
@@ -201,7 +237,6 @@ function runCliAction(actionType, params, port) {
         }
         catch {
             console.error(`Failed to connect to BNBot server at ${url}`);
-            console.error('Make sure "bnbot serve" is running first.');
             process.exit(1);
             return;
         }
