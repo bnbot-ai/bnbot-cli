@@ -78,7 +78,22 @@ async function runSetup() {
         console.log('⚠️  Could not download skill.md (network error)');
         console.log('   Manual: curl -o ~/.claude/commands/bnbot.md ' + SKILL_URL);
     }
-    // Step 3: Chrome extension reminder
+    // Step 3: Start server in background
+    console.log('');
+    console.log('🚀 Starting server...');
+    try {
+        const { spawn } = await import('child_process');
+        const child = spawn(process.execPath, [process.argv[1], 'serve'], {
+            detached: true,
+            stdio: 'ignore',
+        });
+        child.unref();
+        console.log('✅ Server running in background (ws://localhost:18900)');
+    }
+    catch {
+        console.log('⚠️  Could not start server. Run manually: bnbot serve');
+    }
+    // Step 4: Chrome extension reminder
     console.log('');
     console.log('🌐 Chrome Extension:');
     console.log(`   ${link(CHROME_URL)}`);
