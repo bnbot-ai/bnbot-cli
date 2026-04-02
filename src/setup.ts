@@ -20,7 +20,6 @@ const CHROME_URL = 'https://chromewebstore.google.com/detail/bnbot/haammgigdkcko
 // Skill install paths for different agents
 const SKILL_TARGETS = [
   { dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
-  { dir: join(homedir(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
   { dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 

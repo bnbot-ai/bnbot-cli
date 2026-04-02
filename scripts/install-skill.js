@@ -12,7 +12,6 @@ const { homedir } = require('os');
 const SKILL_URL = 'https://bnbot.ai/skill.md';
 const TARGETS = [
   { dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
-  { dir: join(homedir(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
   { dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 
