@@ -22,6 +22,7 @@ const SKILL_TARGETS = [
   { dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
   { dir: join(homedir(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
   { dir: join(homedir(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
+  { dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 
 // Detect if terminal supports ANSI colors (not in OpenClaw/chat environments)

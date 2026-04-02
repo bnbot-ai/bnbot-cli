@@ -14,6 +14,7 @@ const TARGETS = [
   { dir: join(homedir(), '.claude', 'commands'), file: 'bnbot.md' },
   { dir: join(homedir(), '.openclaw', 'skills', 'bnbot'), file: 'SKILL.md' },
   { dir: join(homedir(), '.codex', 'skills', 'bnbot'), file: 'SKILL.md' },
+  { dir: join(homedir(), '.agents', 'skills', 'bnbot'), file: 'SKILL.md' },
 ];
 
 async function main() {
